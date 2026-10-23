@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ cls.display_name }} | {{ school_setting.school_name }}{% endblock %}
+{% block header_title %}Class Arm: {{ cls.display_name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+    <!-- Header Card -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700">Class Level: {{ cls.class_level.name }}</span>
+            <h1 class="text-3xl font-extrabold text-slate-900 mt-1">{{ cls.display_name }}</h1>
+            <p class="text-xs text-slate-500 mt-1">
+                Class Teacher: <strong class="text-slate-800">{{ cls.class_teacher.full_name|default:"Unassigned" }}</strong> &bull; Total Enrolled: <strong class="text-indigo-600">{{ students.count }}</strong> Students
+            </p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <a href="{% url 'results:broadsheet' cls.id %}" class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs transition">
+                View Class Broadsheet
+            </a>
+            <a href="{% url 'academics:class_list' %}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">
+                &larr; Classes List
+            </a>
+        </div>
+    </div>
+
+    <!-- 2 Column Section: Students in Class & Subject Allocations -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Students Enrolled (2 cols) -->
+        <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">Enrolled Students ({{ students.count }})</h3>
+                    <p class="text-xs text-slate-500">Learners registered in this class section</p>
+                </div>
+                <a href="{% url 'students:student_create' %}" class="text-xs font-bold text-indigo-600 hover:underline">+ Admit Student</a>
+            </div>
+
+            <div class="divide-y divide-slate-100">
+                {% for st in students %}
+                <div class="p-4 flex items-center justify-between hover:bg-slate-50/50 transition">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-9 h-9 rounded-full bg-slate-100 font-bold text-xs text-slate-700 flex items-center justify-center">
+                            {{ st.first_name|slice:":1" }}{{ st.last_name|slice:":1" }}
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-900">
+                                <a href="{% url 'students:student_detail' st.pk %}" class="hover:text-indigo-600">{{ st.full_name }}</a>
+                            </h4>
+                            <p class="text-[11px] text-slate-500">Adm No: {{ st.admission_number }} &bull; Gender: {{ st.gender }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <a href="{% url 'results:report_card' st.id %}" class="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg transition">
+                            Report Card
+                        </a>
+                        <a href="{% url 'students:student_detail' st.pk %}" class="text-xs text-slate-400 hover:text-slate-700 font-semibold p-1">
+                            &rarr;
+                        </a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-8 text-center text-slate-400 text-xs">
+                    No active students enrolled in this class yet.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Subject Allocations in this class (1 col) -->
+        <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">Subject Teachers</h3>
+                    <p class="text-xs text-slate-500">Assigned instructors</p>
+                </div>
+            </div>
+
+            <div class="divide-y divide-slate-100">
+                {% for alloc in allocations %}
+                <div class="p-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-900">{{ alloc.subject.name }}</span>
+                        <span class="font-mono text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">{{ alloc.subject.code }}</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-1">
+                        Teacher: <strong class="text-indigo-600">{{ alloc.teacher.full_name }}</strong>
+                    </p>
+                    <div class="mt-2 flex items-center justify-between text-[11px]">
+                        <span class="text-slate-400">{{ alloc.academic_session.name }}</span>
+                        <a href="{% url 'results:entry' %}?class_id={{ cls.id }}&subject_id={{ alloc.subject.id }}" class="text-rose-600 hover:underline font-bold">
+                            Enter Scores &rarr;
+                        </a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-8 text-center text-slate-400 text-xs">
+                    No subjects allocated for this class yet.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

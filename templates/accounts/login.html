@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In | {{ school_setting.school_name }}{% endblock %}
+
+{% block auth_content %}
+<div class="min-h-screen bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+    <!-- Ambient background glow -->
+    <div class="absolute -top-40 -right-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4">
+        <!-- School Crest & Branding -->
+        <div class="text-center">
+            {% if school_setting.school_logo %}
+                <img class="mx-auto h-20 w-20 object-contain rounded-2xl bg-white p-2 shadow-xl ring-1 ring-white/10" src="{{ school_setting.school_logo.url }}" alt="{{ school_setting.school_name }} Logo">
+            {% else %}
+                <div class="mx-auto h-20 w-20 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white text-3xl font-extrabold shadow-xl shadow-indigo-500/25 ring-1 ring-white/20">
+                    {{ school_setting.school_name|slice:":1" }}
+                </div>
+            {% endif %}
+            <h2 class="mt-6 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+                {{ school_setting.school_name }}
+            </h2>
+            <p class="mt-2 text-sm text-indigo-300 font-medium">
+                {{ school_setting.school_motto }}
+            </p>
+        </div>
+
+        <!-- Flash alerts for login errors -->
+        {% if messages %}
+        <div class="mt-6 space-y-2">
+            {% for message in messages %}
+            <div class="p-4 rounded-xl text-sm font-medium {% if message.tags == 'error' %}bg-rose-900/60 border border-rose-500/40 text-rose-200{% else %}bg-indigo-900/60 border border-indigo-500/40 text-indigo-200{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Login Card -->
+        <div class="mt-6 bg-slate-900/90 backdrop-blur-xl py-8 px-6 shadow-2xl rounded-3xl border border-slate-800 sm:px-10">
+            <div class="mb-6 pb-4 border-b border-slate-800">
+                <h3 class="text-lg font-bold text-white">Staff Portal Login</h3>
+                <p class="text-xs text-slate-400">Sign in with your assigned Staff ID or Username</p>
+            </div>
+
+            <form class="space-y-5" method="POST" action="{% url 'accounts:login' %}">
+                {% csrf_token %}
+                
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Username or Staff ID</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <p class="mt-1 text-xs text-rose-400">{{ form.username.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Password</label>
+                    {{ form.password }}
+                    {% if form.password.errors %}
+                        <p class="mt-1 text-xs text-rose-400">{{ form.password.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full flex justify-center py-3.5 px-4 rounded-xl shadow-lg shadow-indigo-600/30 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out cursor-pointer">
+                        Access Staff Portal
+                    </button>
+                </div>
+            </form>
+
+            <!-- Demo Credentials Helper Accordion -->
+            <div class="mt-8 pt-5 border-t border-slate-800 text-xs text-slate-400">
+                <p class="font-semibold text-slate-300 mb-2 flex items-center justify-between">
+                    <span>Quick Demo Credentials</span>
+                    <span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded">Pre-seeded</span>
+                </p>
+                <div class="space-y-1.5 font-mono text-[11px] bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+                    <div class="flex justify-between items-center text-slate-300">
+                        <span><strong>Principal:</strong> principal</span>
+                        <span class="text-indigo-400">password123</span>
+                    </div>
+                    <div class="flex justify-between items-center text-slate-300">
+                        <span><strong>Teacher:</strong> teacher_math</span>
+                        <span class="text-indigo-400">password123</span>
+                    </div>
+                    <div class="flex justify-between items-center text-slate-300">
+                        <span><strong>Accountant:</strong> accountant</span>
+                        <span class="text-indigo-400">password123</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- School Contact Footer -->
+        <div class="mt-6 text-center text-xs text-slate-500">
+            <p>{{ school_setting.address }}</p>
+            <p class="mt-1">Inquiries: {{ school_setting.phone }} | {{ school_setting.email }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

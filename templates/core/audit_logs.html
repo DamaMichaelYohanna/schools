@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}System Audit Logs | {{ school_setting.school_name }}{% endblock %}
+{% block header_title %}System Audit Trail{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-xl font-extrabold text-slate-900">System Activity & Audit Logs</h1>
+            <p class="text-xs text-slate-500">Security audit trail of user actions, score entries, fee payments, and settings changes.</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-3.5">Timestamp</th>
+                        <th class="px-6 py-3.5">User / Staff</th>
+                        <th class="px-6 py-3.5">Action</th>
+                        <th class="px-6 py-3.5">Details</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                    {% for log in logs %}
+                    <tr class="hover:bg-slate-50/50">
+                        <td class="px-6 py-3 text-slate-500 whitespace-nowrap">{{ log.timestamp|date:"M d, Y H:i:s" }}</td>
+                        <td class="px-6 py-3 font-semibold text-slate-900 whitespace-nowrap">{{ log.user.full_name|default:"System" }} ({{ log.user.get_role_display|default:"System" }})</td>
+                        <td class="px-6 py-3">
+                            <span class="px-2 py-0.5 rounded font-mono font-bold text-[11px] bg-slate-100 text-slate-800">{{ log.action }}</span>
+                        </td>
+                        <td class="px-6 py-3 text-slate-600">{{ log.details }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-8 text-center text-slate-400">No activity recorded yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

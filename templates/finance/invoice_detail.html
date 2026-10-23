@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Invoice #{{ invoice.invoice_number }} | {{ school_setting.school_name }}{% endblock %}
+{% block header_title %}Invoice Details & Payment Ledger{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="font-mono text-xs font-bold text-slate-500 uppercase">Invoice</span>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold {% if invoice.status == 'PAID' %}bg-emerald-50 text-emerald-700{% elif invoice.status == 'PARTIAL' %}bg-amber-50 text-amber-700{% else %}bg-rose-50 text-rose-700{% endif %}">
+                    {{ invoice.get_status_display }}
+                </span>
+            </div>
+            <h1 class="text-2xl font-extrabold text-slate-900 mt-1">#{{ invoice.invoice_number }}</h1>
+            <p class="text-xs text-slate-500">Student: <strong class="text-slate-800">{{ invoice.student.full_name }}</strong> ({{ invoice.student.admission_number }})</p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            {% if invoice.balance > 0 and user.is_accountant %}
+            <a href="{% url 'finance:record_payment' %}?invoice_id={{ invoice.pk }}" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 transition">
+                + Record Payment
+            </a>
+            {% endif %}
+            <a href="{% url 'finance:invoices_list' %}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">
+                &larr; Invoices List
+            </a>
+        </div>
+    </div>
+
+    <!-- Invoice Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs">
+            <span class="text-slate-400 block text-xs font-bold uppercase tracking-wider">Total Billed</span>
+            <p class="text-2xl font-extrabold text-slate-900 mt-1">{{ school_setting.currency_symbol }}{{ invoice.total_amount|intcomma }}</p>
+            <p class="text-[11px] text-slate-500 mt-1">{{ invoice.academic_session.name }} - {{ invoice.academic_term.term_type }}</p>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs">
+            <span class="text-slate-400 block text-xs font-bold uppercase tracking-wider">Amount Paid</span>
+            <p class="text-2xl font-extrabold text-emerald-600 mt-1">{{ school_setting.currency_symbol }}{{ invoice.amount_paid|intcomma }}</p>
+            <p class="text-[11px] text-slate-500 mt-1">{{ payments.count }} Payment{{ payments.count|pluralize }} Made</p>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs">
+            <span class="text-slate-400 block text-xs font-bold uppercase tracking-wider">Remaining Balance</span>
+            <p class="text-2xl font-extrabold {% if invoice.balance > 0 %}text-rose-600{% else %}text-slate-400{% endif %} mt-1">
+                {{ school_setting.currency_symbol }}{{ invoice.balance|intcomma }}
+            </p>
+            <p class="text-[11px] text-slate-500 mt-1">Due: {{ invoice.due_date|default:"Immediate" }}</p>
+        </div>
+    </div>
+
+    <!-- Payments Made on this Invoice -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="p-6 border-b border-slate-100">
+            <h3 class="text-base font-bold text-slate-900">Payment Transactions History</h3>
+            <p class="text-xs text-slate-500">Official cash & bank payments credited to this invoice</p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-3.5">Receipt No</th>
+                        <th class="px-6 py-3.5">Payment Date</th>
+                        <th class="px-6 py-3.5">Method</th>
+                        <th class="px-6 py-3.5">Reference</th>
+                        <th class="px-6 py-3.5">Amount</th>
+                        <th class="px-6 py-3.5">Recorded By</th>
+                        <th class="px-6 py-3.5 text-right">Receipt</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                    {% for p in payments %}
+                    <tr class="hover:bg-slate-50/50">
+                        <td class="px-6 py-3.5 font-mono font-bold text-indigo-600">{{ p.receipt_number }}</td>
+                        <td class="px-6 py-3.5 text-slate-600">{{ p.payment_date }}</td>
+                        <td class="px-6 py-3.5 font-semibold">{{ p.get_payment_method_display }}</td>
+                        <td class="px-6 py-3.5 font-mono text-slate-400">{{ p.transaction_reference|default:"-" }}</td>
+                        <td class="px-6 py-3.5 font-bold text-emerald-600 text-sm">{{ school_setting.currency_symbol }}{{ p.amount|intcomma }}</td>
+                        <td class="px-6 py-3.5 text-slate-600">{{ p.received_by.full_name|default:"Accountant" }}</td>
+                        <td class="px-6 py-3.5 text-right">
+                            <a href="{% url 'finance:receipt' p.pk %}" class="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold rounded-lg text-xs transition">
+                                Print Receipt
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-8 text-center text-slate-400">No payment transactions recorded on this invoice yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

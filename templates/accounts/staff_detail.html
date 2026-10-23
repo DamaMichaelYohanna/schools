@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ staff.full_name }} | {{ school_setting.school_name }}{% endblock %}
+{% block header_title %}Staff Profile Details{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-8">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-900">{{ staff.full_name }}</h1>
+            <p class="text-xs text-slate-500">Role: <span class="font-bold text-indigo-600">{{ staff.get_role_display }}</span> &bull; Staff ID: {{ staff.staff_id|default:"N/A" }}</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            {% if user.is_principal %}
+            <a href="{% url 'accounts:staff_edit' staff.pk %}" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-xs transition">
+                Edit Staff Profile & Role
+            </a>
+            {% endif %}
+            <a href="{% url 'accounts:staff_list' %}" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">
+                &larr; Staff Directory
+            </a>
+        </div>
+    </div>
+
+    <!-- Profile Overview Card -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs flex flex-col md:flex-row gap-6">
+        <div class="w-28 h-28 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
+            {% if staff.avatar %}
+                <img src="{{ staff.avatar.url }}" alt="{{ staff.full_name }}" class="w-full h-full object-cover">
+            {% else %}
+                <span class="text-3xl font-extrabold text-slate-400">{{ staff.first_name|slice:":1" }}{{ staff.last_name|slice:":1" }}</span>
+            {% endif %}
+        </div>
+        <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+            <div>
+                <p class="text-slate-400 font-semibold uppercase text-[10px]">Email Address</p>
+                <p class="font-bold text-slate-800 mt-0.5">{{ staff.email|default:"Not specified" }}</p>
+            </div>
+            <div>
+                <p class="text-slate-400 font-semibold uppercase text-[10px]">Phone Number</p>
+                <p class="font-bold text-slate-800 mt-0.5">{{ staff.phone_number|default:"Not specified" }}</p>
+            </div>
+            <div>
+                <p class="text-slate-400 font-semibold uppercase text-[10px]">Qualification</p>
+                <p class="font-bold text-slate-800 mt-0.5">{{ staff.qualification|default:"Not specified" }}</p>
+            </div>
+            <div>
+                <p class="text-slate-400 font-semibold uppercase text-[10px]">Gender</p>
+                <p class="font-bold text-slate-800 mt-0.5">{{ staff.gender|default:"Not specified" }}</p>
+            </div>
+            <div>
+                <p class="text-slate-400 font-semibold uppercase text-[10px]">Date Employed</p>
+                <p class="font-bold text-slate-800 mt-0.5">{{ staff.date_employed|default:"Not specified" }}</p>
+            </div>
+            <div>
+                <p class="text-slate-400 font-semibold uppercase text-[10px]">Account Status</p>
+                <p class="mt-0.5">
+                    {% if staff.is_active_staff %}
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Active Staff</span>
+                    {% else %}
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">Inactive</span>
+                    {% endif %}
+                </p>
+            </div>
+            {% if staff.address %}
+            <div class="sm:col-span-2 md:col-span-3">
+                <p class="text-slate-400 font-semibold uppercase text-[10px]">Address</p>
+                <p class="font-bold text-slate-800 mt-0.5">{{ staff.address }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Assigned Classes & Subjects (Allocations) -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div>
+                <h3 class="text-base font-bold text-slate-900">Teaching Allocations</h3>
+                <p class="text-xs text-slate-500">Subjects assigned across secondary school classes</p>
+            </div>
+            {% if user.is_principal %}
+            <a href="{% url 'academics:allocation_create' %}" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition">
+                + Assign Subject
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="divide-y divide-slate-100">
+            {% for alloc in allocations %}
+            <div class="p-5 flex items-center justify-between hover:bg-slate-50/50 transition">
+                <div class="flex items-center space-x-3.5">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 font-bold text-xs flex items-center justify-center">
+                        {{ alloc.subject.code }}
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-900">{{ alloc.subject.name }}</h4>
+                        <p class="text-[11px] text-slate-500">
+                            Class: <strong class="text-slate-800">{{ alloc.class_section.display_name }}</strong> &bull;
+                            Session: {{ alloc.academic_session.name }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <a href="{% url 'results:entry' %}?class_id={{ alloc.class_section.id }}&subject_id={{ alloc.subject.id }}" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition">
+                        Scores
+                    </a>
+                    <a href="{% url 'results:broadsheet' alloc.class_section.id %}" class="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold transition border border-slate-200">
+                        Broadsheet
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="p-8 text-center text-slate-400 text-xs">
+                No subject allocations assigned yet.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

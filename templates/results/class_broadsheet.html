@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Class Broadsheet: {{ class_section.display_name }} | {{ school_setting.school_name }}{% endblock %}
+{% block header_title %}Class Composite Broadsheet: {{ class_section.display_name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-900">{{ class_section.display_name }} Master Broadsheet</h1>
+            <p class="text-xs text-slate-500">Session: {{ session.name }} &bull; Term: {{ term.term_type }} &bull; Class Teacher: {{ class_section.class_teacher.full_name|default:"Unassigned" }}</p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <a href="?session_id={{ session.id }}&term_id={{ term.id }}&recompute=1" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-xs transition inline-flex items-center space-x-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                <span>Recompute Class Rankings</span>
+            </a>
+            <a href="{% url 'academics:class_detail' class_section.id %}" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">
+                &larr; Class Details
+            </a>
+        </div>
+    </div>
+
+    <!-- Broadsheet Matrix -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-900 text-white uppercase text-[11px] font-bold border-b border-slate-800">
+                    <tr>
+                        <th class="px-4 py-3.5 text-center w-12">Pos</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Adm No</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Student Name</th>
+                        {% for sb in subjects %}
+                        <th class="px-3 py-3.5 text-center font-mono" title="{{ sb.name }}">{{ sb.code }}</th>
+                        {% endfor %}
+                        <th class="px-4 py-3.5 text-center bg-indigo-950 text-indigo-200 font-extrabold">Total</th>
+                        <th class="px-4 py-3.5 text-center bg-indigo-950 text-indigo-200 font-extrabold">Average</th>
+                        <th class="px-4 py-3.5 text-right">Report</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                    {% for row in broadsheet_data %}
+                    <tr class="hover:bg-slate-50/60 transition">
+                        <td class="px-4 py-3 text-center font-bold text-slate-900">
+                            {% if row.position == 1 %}
+                                <span class="w-6 h-6 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center mx-auto text-xs">1</span>
+                            {% elif row.position == 2 %}
+                                <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center mx-auto text-xs">2</span>
+                            {% elif row.position == 3 %}
+                                <span class="w-6 h-6 rounded-full bg-amber-50 text-amber-700 flex items-center justify-center mx-auto text-xs">3</span>
+                            {% else %}
+                                {{ row.position }}
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 font-mono text-indigo-600 font-bold whitespace-nowrap">{{ row.student.admission_number }}</td>
+                        <td class="px-4 py-3 font-bold text-slate-900 whitespace-nowrap">
+                            <a href="{% url 'students:student_detail' row.student.pk %}" class="hover:text-indigo-600">{{ row.student.full_name }}</a>
+                        </td>
+                        {% for mark in row.subjects %}
+                        <td class="px-3 py-3 text-center font-mono font-medium {% if mark != '-' and mark < 40 %}text-rose-600 font-bold{% endif %}">
+                            {{ mark }}
+                        </td>
+                        {% endfor %}
+                        <td class="px-4 py-3 text-center font-mono font-extrabold text-slate-900 bg-indigo-50/30">
+                            {{ row.total }}
+                        </td>
+                        <td class="px-4 py-3 text-center font-mono font-extrabold text-indigo-600 bg-indigo-50/30">
+                            {{ row.average }}%
+                        </td>
+                        <td class="px-4 py-3 text-right whitespace-nowrap">
+                            <a href="{% url 'results:report_card' row.student.id %}?session_id={{ session.id }}&term_id={{ term.id }}" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 underline">
+                                Report Card
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{{ subjects.count|add:6 }}" class="px-6 py-12 text-center text-slate-400">
+                            No students or results recorded for this session and term.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

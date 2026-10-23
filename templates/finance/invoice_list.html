@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Student Invoices | {{ school_setting.school_name }}{% endblock %}
+{% block header_title %}Student Fee Invoices & Billing{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-900">Student Fee Invoices</h1>
+            <p class="text-xs text-slate-500">Track paid, partially paid, and outstanding term fees.</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <a href="{% url 'finance:record_payment' %}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-xs transition">
+                + Record Payment
+            </a>
+            <a href="{% url 'finance:generate_invoices' %}" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-xs transition">
+                Generate Invoices
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs">
+        <form method="GET" class="flex flex-col sm:flex-row gap-3 items-center">
+            <div class="relative w-full sm:w-72">
+                <input type="text" name="q" value="{{ query }}" placeholder="Search invoice or student..." class="w-full pl-9 pr-4 py-2 rounded-xl text-xs border border-slate-300 focus:ring-2 focus:ring-indigo-400 outline-none">
+                <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+
+            <select name="status" class="w-full sm:w-40 px-3 py-2 rounded-xl text-xs border border-slate-300 focus:ring-2 focus:ring-indigo-400 outline-none">
+                <option value="">All Payment Statuses</option>
+                <option value="PAID" {% if selected_status == 'PAID' %}selected{% endif %}>Fully Paid</option>
+                <option value="PARTIAL" {% if selected_status == 'PARTIAL' %}selected{% endif %}>Partially Paid</option>
+                <option value="UNPAID" {% if selected_status == 'UNPAID' %}selected{% endif %}>Unpaid</option>
+            </select>
+
+            <select name="class_id" class="w-full sm:w-48 px-3 py-2 rounded-xl text-xs border border-slate-300 focus:ring-2 focus:ring-indigo-400 outline-none">
+                <option value="">All Classes</option>
+                {% for c in classes %}
+                <option value="{{ c.id }}" {% if selected_class|stringformat:"s" == c.id|stringformat:"s" %}selected{% endif %}>{{ c.display_name }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition shrink-0">
+                Filter
+            </button>
+        </form>
+    </div>
+
+    <!-- Invoices Table -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-3.5">Invoice No</th>
+                        <th class="px-6 py-3.5">Student</th>
+                        <th class="px-6 py-3.5">Class</th>
+                        <th class="px-6 py-3.5">Term</th>
+                        <th class="px-6 py-3.5 text-right">Total Billed</th>
+                        <th class="px-6 py-3.5 text-right">Paid</th>
+                        <th class="px-6 py-3.5 text-right">Balance</th>
+                        <th class="px-6 py-3.5 text-center">Status</th>
+                        <th class="px-6 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                    {% for inv in page_obj %}
+                    <tr class="hover:bg-slate-50/50">
+                        <td class="px-6 py-3.5 font-mono font-bold text-indigo-600">
+                            <a href="{% url 'finance:invoice_detail' inv.pk %}" class="hover:underline">{{ inv.invoice_number }}</a>
+                        </td>
+                        <td class="px-6 py-3.5 font-bold text-slate-900">
+                            <a href="{% url 'students:student_detail' inv.student.pk %}" class="hover:text-indigo-600">{{ inv.student.full_name }}</a>
+                        </td>
+                        <td class="px-6 py-3.5">{{ inv.student.current_class.display_name }}</td>
+                        <td class="px-6 py-3.5 text-slate-500">{{ inv.academic_term.term_type }}</td>
+                        <td class="px-6 py-3.5 text-right font-bold text-slate-900">{{ school_setting.currency_symbol }}{{ inv.total_amount|intcomma }}</td>
+                        <td class="px-6 py-3.5 text-right font-bold text-emerald-600">{{ school_setting.currency_symbol }}{{ inv.amount_paid|intcomma }}</td>
+                        <td class="px-6 py-3.5 text-right font-bold {% if inv.balance > 0 %}text-rose-600{% else %}text-slate-400{% endif %}">{{ school_setting.currency_symbol }}{{ inv.balance|intcomma }}</td>
+                        <td class="px-6 py-3.5 text-center">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold {% if inv.status == 'PAID' %}bg-emerald-50 text-emerald-700{% elif inv.status == 'PARTIAL' %}bg-amber-50 text-amber-700{% else %}bg-rose-50 text-rose-700{% endif %}">
+                                {{ inv.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-3.5 text-right space-x-2 whitespace-nowrap">
+                            <a href="{% url 'finance:invoice_detail' inv.pk %}" class="text-indigo-600 hover:text-indigo-800 font-bold">Details</a>
+                            {% if inv.balance > 0 %}
+                            <a href="{% url 'finance:record_payment' %}?invoice_id={{ inv.pk }}" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg text-xs font-bold transition">
+                                Pay
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="px-6 py-12 text-center text-slate-400">No invoices match your filters.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <span>Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            <div class="flex items-center space-x-1">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_class %}&class_id={{ selected_class }}{% endif %}" class="px-3 py-1 rounded bg-slate-100 hover:bg-slate-200">Prev</a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_class %}&class_id={{ selected_class }}{% endif %}" class="px-3 py-1 rounded bg-slate-100 hover:bg-slate-200">Next</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

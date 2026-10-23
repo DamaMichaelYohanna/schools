@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Subject Allocations | {{ school_setting.school_name }}{% endblock %}
+{% block header_title %}Subject-Teacher Allocations{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-900">Teaching Subject Allocations</h1>
+            <p class="text-xs text-slate-500">Mapping of secondary school instructors to subjects and class arms.</p>
+        </div>
+        {% if user.is_principal %}
+        <a href="{% url 'academics:allocation_create' %}" class="inline-flex items-center space-x-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-600/20 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span>Assign Subject to Teacher</span>
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Allocations Table -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-3.5">Class Arm</th>
+                        <th class="px-6 py-3.5">Subject</th>
+                        <th class="px-6 py-3.5">Assigned Teacher</th>
+                        <th class="px-6 py-3.5">Session</th>
+                        <th class="px-6 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                    {% for alloc in allocations %}
+                    <tr class="hover:bg-slate-50/50">
+                        <td class="px-6 py-3.5 font-bold text-slate-900 whitespace-nowrap">{{ alloc.class_section.display_name }}</td>
+                        <td class="px-6 py-3.5">
+                            <span class="font-bold text-slate-800">{{ alloc.subject.name }}</span>
+                            <span class="font-mono text-[10px] text-slate-400 ml-1">({{ alloc.subject.code }})</span>
+                        </td>
+                        <td class="px-6 py-3.5">
+                            <div class="flex items-center space-x-2">
+                                <span class="w-7 h-7 rounded-full bg-indigo-50 text-indigo-700 font-bold text-[10px] flex items-center justify-center">
+                                    {{ alloc.teacher.first_name|slice:":1" }}{{ alloc.teacher.last_name|slice:":1" }}
+                                </span>
+                                <span class="font-semibold text-slate-900">{{ alloc.teacher.full_name }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-3.5 font-mono text-slate-500">{{ alloc.academic_session.name }}</td>
+                        <td class="px-6 py-3.5 text-right space-x-2 whitespace-nowrap">
+                            <a href="{% url 'results:entry' %}?class_id={{ alloc.class_section.id }}&subject_id={{ alloc.subject.id }}" class="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition">
+                                Enter Scores
+                            </a>
+                            {% if user.is_principal %}
+                            <a href="{% url 'academics:allocation_delete' alloc.pk %}" class="px-2.5 py-1 text-rose-500 hover:text-rose-700 font-semibold text-xs">
+                                Remove
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-slate-400">No subject allocations recorded yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

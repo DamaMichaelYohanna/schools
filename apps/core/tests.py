@@ -1,0 +1,221 @@
+from django.test import TestCase, Client
+from django.urls import reverse
+from django.contrib.auth import get_user_model
+from datetime import date
+from decimal import Decimal
+
+from apps.core.models import SchoolSetting, AuditLog
+from apps.academics.models import AcademicSession, AcademicTerm, ClassLevel, ClassSection, Subject, SubjectAllocation
+from apps.students.models import Student
+from apps.results.models import SubjectResult, TermReportSummary
+from apps.results.views import compute_class_rankings
+from apps.finance.models import FeeCategory, FeeStructure, Invoice, Payment
+
+User = get_user_model()
+
+
+class SchoolManagementSystemTestCase(TestCase):
+    def setUp(self):
+        # 1. School Setting
+        self.setting = SchoolSetting.load()
+        self.setting.school_name = "Apex Test Secondary School"
+        self.setting.save()
+
+        # 2. Academic Session and Term
+        self.session = AcademicSession.objects.create(name="2025/2026", is_current=True)
+        self.term = AcademicTerm.objects.create(session=self.session, term_type=AcademicTerm.TermChoices.FIRST, is_current=True)
+        self.setting.current_session = self.session
+        self.setting.current_term = self.term
+        self.setting.save()
+
+        # 3. Staff Users with Roles
+        self.principal = User.objects.create_user(
+            username='principal_test',
+            password='password123',
+            role=User.Role.PRINCIPAL,
+            first_name='Head',
+            last_name='Principal'
+        )
+        self.teacher = User.objects.create_user(
+            username='teacher_test',
+            password='password123',
+            role=User.Role.TEACHER,
+            first_name='John',
+            last_name='Teacher'
+        )
+        self.accountant = User.objects.create_user(
+            username='accountant_test',
+            password='password123',
+            role=User.Role.ACCOUNTANT,
+            first_name='Mary',
+            last_name='Accountant'
+        )
+
+        # 4. Class and Subject
+        self.level = ClassLevel.objects.create(name="JSS 1", order=1)
+        self.class_section = ClassSection.objects.create(class_level=self.level, name="A", class_teacher=self.teacher)
+        self.subject = Subject.objects.create(name="Mathematics", code="MTH")
+
+        # Allocation
+        self.allocation = SubjectAllocation.objects.create(
+            teacher=self.teacher,
+            subject=self.subject,
+            class_section=self.class_section,
+            academic_session=self.session
+        )
+
+        # 5. Student
+        self.student1 = Student.objects.create(
+            admission_number="TEST/001",
+            first_name="Alice",
+            last_name="Johnson",
+            gender="Female",
+            date_of_birth=date(2013, 1, 1),
+            admission_date=date(2025, 9, 1),
+            current_class=self.class_section,
+            guardian_name="Bob Johnson",
+            guardian_phone="08012345678"
+        )
+        self.student2 = Student.objects.create(
+            admission_number="TEST/002",
+            first_name="David",
+            last_name="Smith",
+            gender="Male",
+            date_of_birth=date(2013, 2, 2),
+            admission_date=date(2025, 9, 1),
+            current_class=self.class_section,
+            guardian_name="Jane Smith",
+            guardian_phone="08087654321"
+        )
+
+        self.client = Client()
+
+    def test_school_settings_singleton(self):
+        s1 = SchoolSetting.load()
+        s2 = SchoolSetting.load()
+        self.assertEqual(s1.pk, s2.pk)
+        self.assertEqual(s1.school_name, "Apex Test Secondary School")
+
+    def test_user_roles(self):
+        self.assertTrue(self.principal.is_principal)
+        self.assertFalse(self.principal.is_teacher)
+        self.assertTrue(self.teacher.is_teacher)
+        self.assertTrue(self.accountant.is_accountant)
+
+    def test_score_calculation_and_grading(self):
+        # Alice: CA1=14, CA2=14, CA3=10, Exam=52 -> Total = 90 -> Grade A1, Remark Excellent
+        res1 = SubjectResult.objects.create(
+            student=self.student1,
+            subject=self.subject,
+            class_section=self.class_section,
+            academic_session=self.session,
+            academic_term=self.term,
+            teacher=self.teacher,
+            ca1=Decimal('14.00'),
+            ca2=Decimal('14.00'),
+            ca3=Decimal('10.00'),
+            exam=Decimal('52.00')
+        )
+        self.assertEqual(res1.total, Decimal('90.00'))
+        self.assertEqual(res1.grade, 'A1')
+        self.assertEqual(res1.remark, 'Excellent')
+
+        # David: CA1=10, CA2=10, CA3=5, Exam=35 -> Total = 60 -> Grade C4, Remark Credit
+        res2 = SubjectResult.objects.create(
+            student=self.student2,
+            subject=self.subject,
+            class_section=self.class_section,
+            academic_session=self.session,
+            academic_term=self.term,
+            teacher=self.teacher,
+            ca1=Decimal('10.00'),
+            ca2=Decimal('10.00'),
+            ca3=Decimal('5.00'),
+            exam=Decimal('35.00')
+        )
+        self.assertEqual(res2.total, Decimal('60.00'))
+        self.assertEqual(res2.grade, 'C4')
+
+        # Compute Rankings
+        compute_class_rankings(self.class_section, self.session, self.term)
+        summary1 = TermReportSummary.objects.get(student=self.student1, academic_term=self.term)
+        summary2 = TermReportSummary.objects.get(student=self.student2, academic_term=self.term)
+
+        self.assertEqual(summary1.position, 1)
+        self.assertEqual(summary2.position, 2)
+        self.assertEqual(summary1.total_students_in_class, 2)
+
+    def test_finance_invoice_and_payment_recalculation(self):
+        invoice = Invoice.objects.create(
+            student=self.student1,
+            academic_session=self.session,
+            academic_term=self.term,
+            total_amount=Decimal('100000.00')
+        )
+        self.assertEqual(invoice.balance, Decimal('100000.00'))
+        self.assertEqual(invoice.status, Invoice.StatusChoices.UNPAID)
+
+        # Make part payment
+        payment1 = Payment.objects.create(
+            invoice=invoice,
+            amount=Decimal('60000.00'),
+            payment_method=Payment.MethodChoices.BANK_TRANSFER,
+            received_by=self.accountant
+        )
+        invoice.refresh_from_db()
+        self.assertEqual(invoice.amount_paid, Decimal('60000.00'))
+        self.assertEqual(invoice.balance, Decimal('40000.00'))
+        self.assertEqual(invoice.status, Invoice.StatusChoices.PARTIAL)
+
+        # Make remaining payment
+        payment2 = Payment.objects.create(
+            invoice=invoice,
+            amount=Decimal('40000.00'),
+            payment_method=Payment.MethodChoices.CASH,
+            received_by=self.accountant
+        )
+        invoice.refresh_from_db()
+        self.assertEqual(invoice.amount_paid, Decimal('100000.00'))
+        self.assertEqual(invoice.balance, Decimal('0.00'))
+        self.assertEqual(invoice.status, Invoice.StatusChoices.PAID)
+
+    def test_login_and_dashboard_access(self):
+        login_success = self.client.login(username='principal_test', password='password123')
+        self.assertTrue(login_success)
+        response = self.client.get(reverse('core:dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Apex Test Secondary School")
+
+    def test_duplicate_session_error_handling(self):
+        self.client.login(username='principal_test', password='password123')
+        # Try to add "2025/2026" again
+        response = self.client.post(reverse('academics:calendar'), {
+            'action': 'add_session',
+            'name': '2025/2026',
+            'start_date': '2025-09-01',
+            'end_date': '2026-07-20',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "already exists")
+        self.assertEqual(AcademicSession.objects.filter(name='2025/2026').count(), 1)
+
+    def test_change_active_term(self):
+        self.client.login(username='principal_test', password='password123')
+        # Create second term
+        term2 = AcademicTerm.objects.create(
+            session=self.session,
+            term_type=AcademicTerm.TermChoices.SECOND,
+            is_current=False
+        )
+        response = self.client.post(reverse('academics:calendar'), {
+            'action': 'set_current_term',
+            'term_id': term2.id,
+        })
+        self.assertEqual(response.status_code, 302)
+        term2.refresh_from_db()
+        self.term.refresh_from_db()
+        self.assertTrue(term2.is_current)
+        self.assertFalse(self.term.is_current)
+
+        setting = SchoolSetting.load()
+        self.assertEqual(setting.current_term, term2)

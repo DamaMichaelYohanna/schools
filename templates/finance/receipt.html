@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Receipt #{{ payment.receipt_number }} | {{ school_setting.school_name }}{% endblock %}
+{% block header_title %}Official Payment Receipt{% endblock %}
+
+{% block extra_head %}
+<style>
+    @media print {
+        @page {
+            size: A4 portrait;
+            margin: 15mm;
+        }
+        body {
+            background: white !important;
+            font-size: 12px !important;
+            color: #000 !important;
+        }
+        .receipt-card {
+            border: 2px solid #000 !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            padding: 24px !important;
+            margin: 0 !important;
+            width: 100% !important;
+        }
+        .no-print {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+
+    <!-- Action Toolbar (Screen Only) -->
+    <div class="no-print flex items-center justify-between pb-4 border-b border-slate-200">
+        <div>
+            <h1 class="text-xl font-extrabold text-slate-900">Payment Receipt #{{ payment.receipt_number }}</h1>
+            <p class="text-xs text-slate-500">Official proof of payment for bursary records.</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button type="button" onclick="window.print()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 transition inline-flex items-center space-x-2 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                <span>Print Official Receipt</span>
+            </button>
+            <a href="{% url 'finance:invoices_list' %}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">
+                &larr; Back to Invoices
+            </a>
+        </div>
+    </div>
+
+    <!-- Official Printable Receipt Sheet -->
+    <div class="receipt-card bg-white rounded-3xl p-8 sm:p-12 border border-slate-200/80 shadow-lg space-y-8 relative overflow-hidden">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b-2 border-slate-900 pb-6">
+            <div class="flex items-center space-x-4">
+                <div class="w-20 h-20 flex items-center justify-center shrink-0">
+                    {% if setting.school_logo %}
+                        <img src="{{ setting.school_logo.url }}" alt="School Logo" class="max-h-20 max-w-20 object-contain">
+                    {% else %}
+                        <div class="w-16 h-16 rounded-xl bg-indigo-900 text-white font-extrabold text-2xl flex items-center justify-center">
+                            {{ setting.school_name|slice:":1" }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div>
+                    <h2 class="text-2xl font-black uppercase text-slate-900 tracking-tight">{{ setting.school_name }}</h2>
+                    <p class="text-xs font-semibold text-indigo-700 italic">"{{ setting.school_motto }}"</p>
+                    <p class="text-[11px] text-slate-500 mt-1">{{ setting.address }} &bull; {{ setting.phone }}</p>
+                </div>
+            </div>
+
+            <div class="text-right">
+                <span class="inline-block bg-emerald-700 text-white px-3 py-1 rounded text-xs font-bold uppercase tracking-wider">
+                    Official Fee Receipt
+                </span>
+                <p class="font-mono text-sm font-extrabold text-slate-900 mt-2">No: {{ payment.receipt_number }}</p>
+                <p class="text-[11px] text-slate-500">Date: {{ payment.payment_date }}</p>
+            </div>
+        </div>
+
+        <!-- Student & Invoice Details Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 bg-slate-50 p-5 rounded-2xl border border-slate-200 text-xs">
+            <div>
+                <span class="text-slate-400 block text-[10px] uppercase font-bold">Received From (Student):</span>
+                <span class="font-bold text-slate-900 text-sm">{{ student.full_name }}</span>
+            </div>
+            <div>
+                <span class="text-slate-400 block text-[10px] uppercase font-bold">Admission Number:</span>
+                <span class="font-mono font-bold text-indigo-700">{{ student.admission_number }}</span>
+            </div>
+            <div>
+                <span class="text-slate-400 block text-[10px] uppercase font-bold">Class / Arm:</span>
+                <span class="font-bold text-slate-800">{{ student.current_class.display_name }}</span>
+            </div>
+            <div>
+                <span class="text-slate-400 block text-[10px] uppercase font-bold">Academic Session & Term:</span>
+                <span class="font-semibold text-slate-800">{{ invoice.academic_session.name }} - {{ invoice.academic_term.term_type }}</span>
+            </div>
+            <div>
+                <span class="text-slate-400 block text-[10px] uppercase font-bold">Payment Method:</span>
+                <span class="font-semibold text-slate-800">{{ payment.get_payment_method_display }}</span>
+            </div>
+            <div>
+                <span class="text-slate-400 block text-[10px] uppercase font-bold">Transaction Ref / Slip:</span>
+                <span class="font-mono text-slate-800">{{ payment.transaction_reference|default:"Direct Receipt" }}</span>
+            </div>
+        </div>
+
+        <!-- Ledger Breakdown Table -->
+        <div>
+            <table class="w-full text-left text-xs border border-slate-300">
+                <thead class="bg-slate-100 text-slate-800 uppercase font-bold text-[11px] border-b border-slate-300">
+                    <tr>
+                        <th class="px-4 py-3">Description</th>
+                        <th class="px-4 py-3 text-right">Invoice Ref</th>
+                        <th class="px-4 py-3 text-right">Amount Paid</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 text-slate-800">
+                    <tr>
+                        <td class="px-4 py-4 font-bold text-slate-900">
+                            Secondary School Tuition & Institutional Fees
+                            {% if payment.remarks %}
+                            <p class="text-[11px] text-slate-500 font-normal mt-0.5">Note: {{ payment.remarks }}</p>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-4 text-right font-mono text-slate-600">{{ invoice.invoice_number }}</td>
+                        <td class="px-4 py-4 text-right font-extrabold text-base text-emerald-700 font-mono">
+                            {{ setting.currency_symbol }}{{ payment.amount|intcomma }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Account Balance Summary -->
+        <div class="flex justify-end">
+            <div class="w-72 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-slate-500">Total Invoice Amount:</span>
+                    <span class="font-bold text-slate-800 font-mono">{{ setting.currency_symbol }}{{ invoice.total_amount|intcomma }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-500">Total Cumulative Paid:</span>
+                    <span class="font-bold text-emerald-700 font-mono">{{ setting.currency_symbol }}{{ invoice.amount_paid|intcomma }}</span>
+                </div>
+                <div class="flex justify-between pt-2 border-t border-slate-200 text-sm font-extrabold">
+                    <span>Outstanding Balance:</span>
+                    <span class="{% if invoice.balance > 0 %}text-rose-600{% else %}text-slate-500{% endif %} font-mono">
+                        {{ setting.currency_symbol }}{{ invoice.balance|intcomma }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signatures & Stamp -->
+        <div class="pt-8 border-t border-slate-300 grid grid-cols-2 gap-8 text-xs">
+            <div>
+                <p class="text-[10px] text-slate-400 uppercase font-bold">Issued By (Bursary / Accounts):</p>
+                <p class="font-bold text-slate-900 mt-1">{{ payment.received_by.full_name|default:"School Bursar" }}</p>
+                <div class="w-48 border-b border-slate-400 mt-8"></div>
+                <span class="text-[10px] text-slate-500">Cashier's Signature & Date</span>
+            </div>
+
+            <div class="text-right flex flex-col items-end">
+                <div class="w-28 h-20 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center text-slate-400 text-[10px] uppercase font-bold text-center p-2">
+                    Official Bursary Stamp
+                </div>
+                <span class="text-[10px] text-slate-400 mt-2">Thank you for your payment</span>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,334 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Dashboard | {{ school_setting.school_name }}{% endblock %}
+{% block header_title %}Secondary School Control Center{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+    <!-- Welcome Greeting Header -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 md:p-8 text-white shadow-xl border border-slate-800 relative overflow-hidden">
+        <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="space-y-1">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    Active Session: {{ active_session.name|default:"2025/2026" }} &bull; {{ active_term|default:"1st Term" }}
+                </span>
+                <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+                    Welcome, {{ user.full_name }}
+                </h1>
+                <p class="text-slate-400 text-sm">
+                    Logged in as <strong class="text-indigo-300">{{ user.get_role_display }}</strong> &bull; Staff ID: {{ user.staff_id|default:"N/A" }}
+                </p>
+            </div>
+
+            <!-- Quick Action Shortcuts -->
+            <div class="flex flex-wrap items-center gap-2.5">
+                {% if user.is_principal %}
+                    <a href="{% url 'students:student_create' %}" class="inline-flex items-center space-x-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-sm transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span>Admit Student</span>
+                    </a>
+                    <a href="{% url 'accounts:staff_create' %}" class="inline-flex items-center space-x-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold border border-slate-700 shadow-sm transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                        <span>Create Staff</span>
+                    </a>
+                {% elif user.is_teacher %}
+                    <a href="{% url 'results:select' %}" class="inline-flex items-center space-x-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-semibold shadow-sm transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        <span>Upload Result Scores</span>
+                    </a>
+                {% elif user.is_accountant %}
+                    <a href="{% url 'finance:record_payment' %}" class="inline-flex items-center space-x-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow-sm transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                        <span>Record Payment</span>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if user.is_principal %}
+    <!-- PRINCIPAL & ADMIN VIEW -->
+    <div class="space-y-8">
+        <!-- 4 Metric Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <!-- Total Students -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Enrolled Students</p>
+                    <h3 class="text-2xl font-extrabold text-slate-900 mt-0.5">{{ total_students }}</h3>
+                    <a href="{% url 'students:student_list' %}" class="text-xs text-blue-600 hover:underline font-medium">View students &rarr;</a>
+                </div>
+            </div>
+
+            <!-- Staff Members -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Academic Staff</p>
+                    <h3 class="text-2xl font-extrabold text-slate-900 mt-0.5">{{ total_staff }}</h3>
+                    <a href="{% url 'accounts:staff_list' %}" class="text-xs text-indigo-600 hover:underline font-medium">Manage staff &rarr;</a>
+                </div>
+            </div>
+
+            <!-- Classes & Arms -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Classes & Arms</p>
+                    <h3 class="text-2xl font-extrabold text-slate-900 mt-0.5">{{ total_classes }}</h3>
+                    <a href="{% url 'academics:class_list' %}" class="text-xs text-amber-600 hover:underline font-medium">View arms &rarr;</a>
+                </div>
+            </div>
+
+            <!-- Revenue Collected -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Fee Collection</p>
+                    <h3 class="text-2xl font-extrabold text-slate-900 mt-0.5">{{ school_setting.currency_symbol }}{{ total_collected|intcomma }}</h3>
+                    <a href="{% url 'finance:dashboard' %}" class="text-xs text-emerald-600 hover:underline font-medium">Finance center &rarr;</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Progress Card -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs">
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900">Term Revenue Status</h3>
+                    <p class="text-xs text-slate-500">Total Billed: {{ school_setting.currency_symbol }}{{ total_invoiced|intcomma }} &bull; Outstanding Debt: {{ school_setting.currency_symbol }}{{ total_outstanding|intcomma }}</p>
+                </div>
+                <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700">
+                    Collected: {{ school_setting.currency_symbol }}{{ total_collected|intcomma }}
+                </span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden flex">
+                {% if total_invoiced > 0 %}
+                    <div class="bg-emerald-500 h-3" style="width: {% widthratio total_collected total_invoiced 100 %}%"></div>
+                    <div class="bg-rose-400 h-3" style="width: {% widthratio total_outstanding total_invoiced 100 %}%"></div>
+                {% else %}
+                    <div class="bg-slate-300 h-3 w-full"></div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Two Columns Layout: Recent Activity & Logs -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Left: Recent Admitted Students -->
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-slate-900">Recently Enrolled Students</h3>
+                    <a href="{% url 'students:student_list' %}" class="text-xs text-indigo-600 hover:underline font-semibold">View All</a>
+                </div>
+                <div class="divide-y divide-slate-100">
+                    {% for student in recent_students %}
+                    <div class="p-4 flex items-center justify-between hover:bg-slate-50/50 transition">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-xs text-slate-700">
+                                {{ student.first_name|slice:":1" }}{{ student.last_name|slice:":1" }}
+                            </div>
+                            <div>
+                                <a href="{% url 'students:student_detail' student.pk %}" class="text-sm font-semibold text-slate-900 hover:text-indigo-600">{{ student.full_name }}</a>
+                                <p class="text-xs text-slate-500">Adm No: {{ student.admission_number }} &bull; {{ student.current_class.display_name|default:"Unassigned" }}</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Active</span>
+                    </div>
+                    {% empty %}
+                    <p class="p-6 text-center text-xs text-slate-400">No students registered yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Right: System Audit Logs -->
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-slate-900">Recent System Activity</h3>
+                    <a href="{% url 'core:audit_logs' %}" class="text-xs text-indigo-600 hover:underline font-semibold">All Logs</a>
+                </div>
+                <div class="divide-y divide-slate-100">
+                    {% for log in recent_audit_logs %}
+                    <div class="p-4 flex items-start space-x-3 text-xs">
+                        <div class="w-2 h-2 rounded-full bg-indigo-500 mt-1.5 shrink-0"></div>
+                        <div class="flex-1">
+                            <p class="font-semibold text-slate-800">{{ log.action }}</p>
+                            <p class="text-slate-600 text-[11px] mt-0.5">{{ log.details }}</p>
+                            <span class="text-[10px] text-slate-400">{{ log.timestamp|timesince }} ago by {{ log.user.full_name|default:"System" }}</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="p-6 text-center text-xs text-slate-400">No activity logged yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% elif user.is_teacher %}
+    <!-- TEACHER VIEW -->
+    <div class="space-y-8">
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs">
+                <p class="text-xs font-semibold text-slate-500 uppercase">My Assigned Subjects</p>
+                <h3 class="text-3xl font-extrabold text-slate-900 mt-1">{{ my_allocations.count }}</h3>
+                <p class="text-xs text-slate-500 mt-1">Across secondary school arms</p>
+            </div>
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs">
+                <p class="text-xs font-semibold text-slate-500 uppercase">Students in My Classes</p>
+                <h3 class="text-3xl font-extrabold text-indigo-600 mt-1">{{ my_students_count }}</h3>
+                <p class="text-xs text-slate-500 mt-1">Active registered learners</p>
+            </div>
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs">
+                <p class="text-xs font-semibold text-slate-500 uppercase">Recorded Scores</p>
+                <h3 class="text-3xl font-extrabold text-emerald-600 mt-1">{{ uploaded_scores_count }}</h3>
+                <p class="text-xs text-slate-500 mt-1">Assessment results entered</p>
+            </div>
+        </div>
+
+        <!-- Allocated Subjects & Classes -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">My Teaching Allocations</h3>
+                    <p class="text-xs text-slate-500">Classes and subjects assigned to you for score entry</p>
+                </div>
+                <a href="{% url 'results:select' %}" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl shadow-xs transition">
+                    Score Upload Hub
+                </a>
+            </div>
+
+            <div class="divide-y divide-slate-100">
+                {% for alloc in my_allocations %}
+                <div class="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/50 transition">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold text-sm">
+                            {{ alloc.subject.code }}
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-900">{{ alloc.subject.name }}</h4>
+                            <p class="text-xs text-slate-500">
+                                Class: <strong class="text-slate-800">{{ alloc.class_section.display_name }}</strong> &bull;
+                                Session: {{ alloc.academic_session.name }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <a href="{% url 'results:entry' %}?class_id={{ alloc.class_section.id }}&subject_id={{ alloc.subject.id }}" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-xl transition inline-flex items-center space-x-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            <span>Enter / Edit Scores</span>
+                        </a>
+                        <a href="{% url 'results:broadsheet' alloc.class_section.id %}" class="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl transition border border-slate-200">
+                            Broadsheet
+                        </a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-8 text-center text-slate-500 text-xs">
+                    You have not been assigned any subjects or classes yet. Please contact the Principal.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if my_managed_classes %}
+        <!-- Managed Classes as Class Teacher -->
+        <div class="bg-emerald-50/60 rounded-2xl border border-emerald-200 p-6">
+            <h3 class="text-sm font-bold text-emerald-900 mb-2">My Class Teacher Assignments</h3>
+            <p class="text-xs text-emerald-700 mb-4">You are the designated Class Teacher for the following arms. You can review term report cards and enter remarks:</p>
+            <div class="flex flex-wrap gap-3">
+                {% for mc in my_managed_classes %}
+                <a href="{% url 'results:broadsheet' mc.id %}" class="px-4 py-2 bg-white rounded-xl border border-emerald-300 text-xs font-bold text-emerald-800 hover:shadow-sm transition">
+                    {{ mc.display_name }} Broadsheet &rarr;
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% elif user.is_accountant %}
+    <!-- ACCOUNTANT VIEW -->
+    <div class="space-y-8">
+        <!-- Financial 3-Metric Summary -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs">
+                <p class="text-xs font-semibold text-slate-500 uppercase">Total School Fees Billed</p>
+                <h3 class="text-3xl font-extrabold text-slate-900 mt-1">{{ school_setting.currency_symbol }}{{ total_invoiced|intcomma }}</h3>
+                <p class="text-xs text-slate-500 mt-1">Generated invoices</p>
+            </div>
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs">
+                <p class="text-xs font-semibold text-slate-500 uppercase">Total Revenue Collected</p>
+                <h3 class="text-3xl font-extrabold text-emerald-600 mt-1">{{ school_setting.currency_symbol }}{{ total_collected|intcomma }}</h3>
+                <p class="text-xs text-slate-500 mt-1">Confirmed bank/cash receipts</p>
+            </div>
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs">
+                <p class="text-xs font-semibold text-slate-500 uppercase">Outstanding Debt</p>
+                <h3 class="text-3xl font-extrabold text-rose-600 mt-1">{{ school_setting.currency_symbol }}{{ total_outstanding|intcomma }}</h3>
+                <p class="text-xs text-slate-500 mt-1">Pending payments</p>
+            </div>
+        </div>
+
+        <!-- Recent Payments Table with Receipt Links -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">Recent Payment Transactions</h3>
+                    <p class="text-xs text-slate-500">Official fees received and recorded</p>
+                </div>
+                <a href="{% url 'finance:record_payment' %}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-xs transition">
+                    + Record New Payment
+                </a>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
+                        <tr>
+                            <th class="px-6 py-3">Receipt No</th>
+                            <th class="px-6 py-3">Student Name</th>
+                            <th class="px-6 py-3">Amount</th>
+                            <th class="px-6 py-3">Method</th>
+                            <th class="px-6 py-3">Date</th>
+                            <th class="px-6 py-3 text-right">Receipt</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-slate-700">
+                        {% for p in recent_payments %}
+                        <tr class="hover:bg-slate-50/50">
+                            <td class="px-6 py-3.5 font-mono font-bold text-indigo-600">{{ p.receipt_number }}</td>
+                            <td class="px-6 py-3.5 font-medium text-slate-900">{{ p.invoice.student.full_name }}</td>
+                            <td class="px-6 py-3.5 font-bold text-emerald-600">{{ school_setting.currency_symbol }}{{ p.amount|intcomma }}</td>
+                            <td class="px-6 py-3.5"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold">{{ p.get_payment_method_display }}</span></td>
+                            <td class="px-6 py-3.5 text-slate-500">{{ p.payment_date }}</td>
+                            <td class="px-6 py-3.5 text-right">
+                                <a href="{% url 'finance:receipt' p.pk %}" class="text-indigo-600 hover:text-indigo-800 font-semibold underline">Print Receipt</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-8 text-center text-slate-400">No payment transactions recorded yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Records | {{ school_setting.school_name }}{% endblock %}
+{% block header_title %}Student Information & Admissions{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-900">Student Directory & Records</h1>
+            <p class="text-xs text-slate-500">Total Enrolled: <strong class="text-indigo-600">{{ total_count }}</strong> Active Learners</p>
+        </div>
+        <div>
+            <a href="{% url 'students:student_create' %}" class="inline-flex items-center space-x-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-600/20 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span>Admit New Student</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex flex-col md:flex-row gap-3 items-center justify-between">
+        <form method="GET" class="w-full flex flex-col sm:flex-row gap-3 items-center">
+            <!-- Search -->
+            <div class="relative w-full sm:w-72">
+                <input type="text" name="q" value="{{ query }}" placeholder="Search name or admission no..." class="w-full pl-9 pr-4 py-2 rounded-xl text-xs border border-slate-300 focus:ring-2 focus:ring-indigo-400 outline-none">
+                <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+
+            <!-- Class Filter -->
+            <select name="class_id" class="w-full sm:w-48 px-3 py-2 rounded-xl text-xs border border-slate-300 focus:ring-2 focus:ring-indigo-400 outline-none">
+                <option value="">All Classes & Arms</option>
+                {% for c in classes %}
+                <option value="{{ c.id }}" {% if selected_class|stringformat:"s" == c.id|stringformat:"s" %}selected{% endif %}>
+                    {{ c.display_name }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <!-- Status Filter -->
+            <select name="status" class="w-full sm:w-36 px-3 py-2 rounded-xl text-xs border border-slate-300 focus:ring-2 focus:ring-indigo-400 outline-none">
+                <option value="ACTIVE" {% if selected_status == 'ACTIVE' %}selected{% endif %}>Active</option>
+                <option value="GRADUATED" {% if selected_status == 'GRADUATED' %}selected{% endif %}>Graduated</option>
+                <option value="SUSPENDED" {% if selected_status == 'SUSPENDED' %}selected{% endif %}>Suspended</option>
+                <option value="WITHDRAWN" {% if selected_status == 'WITHDRAWN' %}selected{% endif %}>Withdrawn</option>
+                <option value="" {% if selected_status == '' %}selected{% endif %}>All Statuses</option>
+            </select>
+
+            <button type="submit" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition shrink-0">
+                Filter
+            </button>
+            {% if query or selected_class or selected_status != 'ACTIVE' %}
+            <a href="{% url 'students:student_list' %}" class="text-xs text-slate-500 hover:text-slate-800 font-medium">Reset</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Students Table -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-3.5">Admission No</th>
+                        <th class="px-6 py-3.5">Student Name</th>
+                        <th class="px-6 py-3.5">Class Arm</th>
+                        <th class="px-6 py-3.5">Gender</th>
+                        <th class="px-6 py-3.5">Guardian Contact</th>
+                        <th class="px-6 py-3.5">Status</th>
+                        <th class="px-6 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                    {% for st in page_obj %}
+                    <tr class="hover:bg-slate-50/50 transition">
+                        <td class="px-6 py-3.5 font-mono font-bold text-indigo-600 whitespace-nowrap">
+                            <a href="{% url 'students:student_detail' st.pk %}" class="hover:underline">{{ st.admission_number }}</a>
+                        </td>
+                        <td class="px-6 py-3.5">
+                            <div class="flex items-center space-x-3">
+                                {% if st.passport_photo %}
+                                    <img src="{{ st.passport_photo.url }}" alt="{{ st.full_name }}" class="w-8 h-8 rounded-full object-cover">
+                                {% else %}
+                                    <div class="w-8 h-8 rounded-full bg-slate-100 font-bold text-[10px] text-slate-700 flex items-center justify-center">
+                                        {{ st.first_name|slice:":1" }}{{ st.last_name|slice:":1" }}
+                                    </div>
+                                {% endif %}
+                                <a href="{% url 'students:student_detail' st.pk %}" class="font-bold text-slate-900 hover:text-indigo-600">
+                                    {{ st.full_name }}
+                                </a>
+                            </div>
+                        </td>
+                        <td class="px-6 py-3.5 font-semibold text-slate-800 whitespace-nowrap">
+                            {{ st.current_class.display_name|default:"Unassigned" }}
+                        </td>
+                        <td class="px-6 py-3.5 text-slate-600">{{ st.gender }}</td>
+                        <td class="px-6 py-3.5">
+                            <p class="font-medium text-slate-800">{{ st.guardian_name }}</p>
+                            <p class="text-[11px] text-slate-400 font-mono">{{ st.guardian_phone }}</p>
+                        </td>
+                        <td class="px-6 py-3.5 whitespace-nowrap">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold {% if st.status == 'ACTIVE' %}bg-emerald-50 text-emerald-700{% elif st.status == 'GRADUATED' %}bg-blue-50 text-blue-700{% else %}bg-slate-100 text-slate-600{% endif %}">
+                                {{ st.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-3.5 text-right space-x-2 whitespace-nowrap">
+                            <a href="{% url 'results:report_card' st.id %}" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg text-xs transition">
+                                Report Card
+                            </a>
+                            <a href="{% url 'students:student_detail' st.pk %}" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-xs transition">
+                                Profile
+                            </a>
+                            <a href="{% url 'students:student_edit' st.pk %}" class="text-slate-400 hover:text-indigo-600 p-1">
+                                Edit
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-slate-400">No student records match your query.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <span>Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            <div class="flex items-center space-x-1">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_class %}&class_id={{ selected_class }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}" class="px-3 py-1 rounded bg-slate-100 hover:bg-slate-200 font-semibold">Prev</a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_class %}&class_id={{ selected_class }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}" class="px-3 py-1 rounded bg-slate-100 hover:bg-slate-200 font-semibold">Next</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

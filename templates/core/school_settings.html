@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}School Identity & Settings | {{ school_setting.school_name }}{% endblock %}
+{% block header_title %}School Configuration & Branding{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-8">
+
+    <!-- Header Banner -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-900">School Identity & Branding</h1>
+            <p class="text-sm text-slate-500">Database-controlled school emblem, official name, grading parameters, and active calendar.</p>
+        </div>
+        <div class="flex items-center space-x-2">
+            <a href="/admin/core/schoolsetting/1/change/" target="_blank" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition inline-flex items-center space-x-1.5 border border-slate-200">
+                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <span>Open in Django Admin</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Live Preview Strip -->
+    <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-center gap-6">
+        <div class="w-24 h-24 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center p-2 shrink-0">
+            {% if setting.school_logo %}
+                <img src="{{ setting.school_logo.url }}" alt="School Crest Preview" class="max-w-full max-h-full object-contain">
+            {% else %}
+                <div class="w-16 h-16 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-2xl font-bold">
+                    {{ setting.school_name|slice:":1" }}
+                </div>
+            {% endif %}
+        </div>
+        <div class="flex-1 text-center md:text-left space-y-1">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">Live Branding Preview</span>
+            <h2 class="text-xl font-extrabold text-slate-900">{{ setting.school_name }}</h2>
+            <p class="text-xs text-slate-500 italic">"{{ setting.school_motto }}"</p>
+            <p class="text-xs text-slate-600">{{ setting.address }} &bull; {{ setting.phone }} &bull; {{ setting.email }}</p>
+        </div>
+    </div>
+
+    <!-- Edit Settings Form -->
+    <form method="POST" enctype="multipart/form-data" class="space-y-8 bg-white rounded-3xl p-6 sm:p-10 border border-slate-200/80 shadow-xs">
+        {% csrf_token %}
+
+        <!-- Section 1: Official Identity -->
+        <div>
+            <h3 class="text-base font-bold text-slate-900 mb-1">1. School Name & Official Crest</h3>
+            <p class="text-xs text-slate-500 mb-5">These appear on official student terminal report sheets, invoices, and payment receipts.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Official School Name *</label>
+                    {{ form.school_name }}
+                    {% if form.school_name.errors %}<p class="text-xs text-rose-500 mt-1">{{ form.school_name.errors.0 }}</p>{% endif %}
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">School Motto / Slogan *</label>
+                    {{ form.school_motto }}
+                    {% if form.school_motto.errors %}<p class="text-xs text-rose-500 mt-1">{{ form.school_motto.errors.0 }}</p>{% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Upload School Logo / Crest</label>
+                    {{ form.school_logo }}
+                    <p class="text-[11px] text-slate-400 mt-1">Recommended: Square PNG/JPEG image (e.g. 512x512)</p>
+                    {% if form.school_logo.errors %}<p class="text-xs text-rose-500 mt-1">{{ form.school_logo.errors.0 }}</p>{% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Principal Digital Signature</label>
+                    {{ form.principal_signature }}
+                    <p class="text-[11px] text-slate-400 mt-1">Transparent PNG for automated report card signing</p>
+                    {% if form.principal_signature.errors %}<p class="text-xs text-rose-500 mt-1">{{ form.principal_signature.errors.0 }}</p>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <hr class="border-slate-100">
+
+        <!-- Section 2: Contact Details -->
+        <div>
+            <h3 class="text-base font-bold text-slate-900 mb-1">2. Contact Information & Physical Address</h3>
+            <p class="text-xs text-slate-500 mb-5">Used for headers and footers on documents and public communications.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">School Email Address</label>
+                    {{ form.email }}
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Official Telephone Number(s)</label>
+                    {{ form.phone }}
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Website URL (optional)</label>
+                    {{ form.website }}
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Currency Symbol</label>
+                    {{ form.currency_symbol }}
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Physical Campus Address</label>
+                    {{ form.address }}
+                </div>
+            </div>
+        </div>
+
+        <hr class="border-slate-100">
+
+        <!-- Section 3: Academic Calendar & Scoring Scale -->
+        <div>
+            <h3 class="text-base font-bold text-slate-900 mb-1">3. Academic Session, Active Term & Scoring Limits</h3>
+            <p class="text-xs text-slate-500 mb-5">Configure the default active term and continuous assessment maximum mark allocation.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Active Academic Session</label>
+                    {{ form.current_session }}
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Active Academic Term</label>
+                    {{ form.current_term }}
+                </div>
+
+                <div class="md:col-span-2 bg-slate-50 p-5 rounded-2xl border border-slate-200/80">
+                    <label class="block text-xs font-bold text-slate-800 uppercase mb-2">Score Assessment Weighting (Must sum to 100%)</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div>
+                            <span class="block text-[11px] font-semibold text-slate-600 mb-1">CA 1 Max</span>
+                            {{ form.ca1_max }}
+                        </div>
+                        <div>
+                            <span class="block text-[11px] font-semibold text-slate-600 mb-1">CA 2 Max</span>
+                            {{ form.ca2_max }}
+                        </div>
+                        <div>
+                            <span class="block text-[11px] font-semibold text-slate-600 mb-1">CA 3 / Project</span>
+                            {{ form.ca3_max }}
+                        </div>
+                        <div>
+                            <span class="block text-[11px] font-semibold text-slate-600 mb-1">Exam Max</span>
+                            {{ form.exam_max }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-4 flex items-center justify-end space-x-3">
+            <a href="{% url 'core:dashboard' %}" class="px-5 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition">
+                Cancel
+            </a>
+            <button type="submit" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition cursor-pointer">
+                Save & Apply School Settings
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

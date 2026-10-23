@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ student.full_name }} | {{ school_setting.school_name }}{% endblock %}
+{% block header_title %}Student 360 Profile{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-8">
+
+    <!-- Top Profile Banner -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
+        <div class="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6 text-center sm:text-left">
+            <div class="w-28 h-28 rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 shadow-xs">
+                {% if student.passport_photo %}
+                    <img src="{{ student.passport_photo.url }}" alt="{{ student.full_name }}" class="w-full h-full object-cover">
+                {% else %}
+                    <div class="w-full h-full flex items-center justify-center font-extrabold text-2xl text-slate-400 bg-slate-100">
+                        {{ student.first_name|slice:":1" }}{{ student.last_name|slice:":1" }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="space-y-1">
+                <div class="flex items-center space-x-2 justify-center sm:justify-start">
+                    <span class="font-mono text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
+                        {{ student.admission_number }}
+                    </span>
+                    <span class="text-xs font-bold px-2.5 py-0.5 rounded-full {% if student.status == 'ACTIVE' %}bg-emerald-50 text-emerald-700{% else %}bg-slate-100 text-slate-700{% endif %}">
+                        {{ student.get_status_display }}
+                    </span>
+                </div>
+                <h1 class="text-2xl font-extrabold text-slate-900">{{ student.full_name }}</h1>
+                <p class="text-xs text-slate-500">
+                    Class: <strong class="text-slate-800">{{ student.current_class.display_name|default:"Unassigned" }}</strong> &bull;
+                    Gender: {{ student.gender }} &bull;
+                    {% if student.age %}Age: {{ student.age }} yrs{% endif %}
+                </p>
+                <p class="text-[11px] text-slate-400">Admitted on: {{ student.admission_date }}</p>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2.5">
+            <a href="{% url 'results:report_card' student.id %}" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-600/20 transition inline-flex items-center space-x-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <span>Current Term Report Card</span>
+            </a>
+            <a href="{% url 'students:student_edit' student.pk %}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">
+                Edit Bio
+            </a>
+            <a href="{% url 'students:student_list' %}" class="px-3 py-2.5 text-xs text-slate-500 hover:text-slate-800 transition">
+                &larr; List
+            </a>
+        </div>
+    </div>
+
+    <!-- 3-Column Info Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+        <!-- Personal & Medical -->
+        <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Bio Data & Health</h3>
+            <div class="space-y-2">
+                <p><span class="text-slate-400">Date of Birth:</span> <strong class="text-slate-800">{{ student.date_of_birth }}</strong></p>
+                <p><span class="text-slate-400">Blood Group:</span> <strong class="text-slate-800">{{ student.blood_group|default:"-" }}</strong></p>
+                <p><span class="text-slate-400">Genotype:</span> <strong class="text-slate-800">{{ student.genotype|default:"-" }}</strong></p>
+                <p><span class="text-slate-400">State of Origin:</span> <strong class="text-slate-800">{{ student.state_of_origin|default:"-" }}</strong></p>
+                <p><span class="text-slate-400">Nationality:</span> <strong class="text-slate-800">{{ student.nationality }}</strong></p>
+                <p><span class="text-slate-400">Address:</span> <span class="text-slate-700">{{ student.residential_address|default:"Not specified" }}</span></p>
+            </div>
+        </div>
+
+        <!-- Parent & Guardian -->
+        <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Parent / Guardian</h3>
+            <div class="space-y-2">
+                <p><span class="text-slate-400">Name:</span> <strong class="text-slate-900">{{ student.guardian_name }}</strong></p>
+                <p><span class="text-slate-400">Relationship:</span> <strong class="text-slate-800">{{ student.guardian_relationship }}</strong></p>
+                <p><span class="text-slate-400">Emergency Phone:</span> <strong class="text-indigo-600 font-mono">{{ student.guardian_phone }}</strong></p>
+                <p><span class="text-slate-400">Email:</span> <span class="text-slate-700">{{ student.guardian_email|default:"None" }}</span></p>
+                <p><span class="text-slate-400">Contact Address:</span> <span class="text-slate-700">{{ student.guardian_address|default:"Same as residential" }}</span></p>
+            </div>
+        </div>
+
+        <!-- Academic & Class Teacher -->
+        <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Enrolled Class Information</h3>
+            <div class="space-y-2">
+                <p><span class="text-slate-400">Current Arm:</span> <strong class="text-slate-900">{{ student.current_class.display_name|default:"Not assigned" }}</strong></p>
+                <p><span class="text-slate-400">Class Level:</span> <strong class="text-slate-800">{{ student.current_class.class_level.name|default:"-" }}</strong></p>
+                <p><span class="text-slate-400">Class Teacher:</span> <strong class="text-slate-800">{{ student.current_class.class_teacher.full_name|default:"Unassigned" }}</strong></p>
+                <p><span class="text-slate-400">Admission Date:</span> <strong class="text-slate-800">{{ student.admission_date }}</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terminal Report Cards History -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div>
+                <h3 class="text-base font-bold text-slate-900">Academic Terminal Reports</h3>
+                <p class="text-xs text-slate-500">Official term assessment report cards for this student</p>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-3.5">Academic Session</th>
+                        <th class="px-6 py-3.5">Term</th>
+                        <th class="px-6 py-3.5">Class Section</th>
+                        <th class="px-6 py-3.5 text-center">Total Score</th>
+                        <th class="px-6 py-3.5 text-center">Average</th>
+                        <th class="px-6 py-3.5 text-center">Class Position</th>
+                        <th class="px-6 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                    {% for rep in reports %}
+                    <tr class="hover:bg-slate-50/50">
+                        <td class="px-6 py-3.5 font-bold text-slate-900">{{ rep.academic_session.name }}</td>
+                        <td class="px-6 py-3.5 font-semibold text-slate-800">{{ rep.academic_term.term_type }}</td>
+                        <td class="px-6 py-3.5">{{ rep.class_section.display_name }}</td>
+                        <td class="px-6 py-3.5 text-center font-bold text-slate-800">{{ rep.total_score }}</td>
+                        <td class="px-6 py-3.5 text-center font-bold text-indigo-600">{{ rep.average_score }}%</td>
+                        <td class="px-6 py-3.5 text-center font-bold">
+                            {% if rep.position %}{{ rep.position }}{% if rep.position == 1 %}st{% elif rep.position == 2 %}nd{% elif rep.position == 3 %}rd{% else %}th{% endif %} of {{ rep.total_students_in_class }}{% else %}-{% endif %}
+                        </td>
+                        <td class="px-6 py-3.5 text-right">
+                            <a href="{% url 'results:report_card' student.id %}?session_id={{ rep.academic_session.id }}&term_id={{ rep.academic_term.id }}" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-xs shadow-xs transition">
+                                View / Print Card
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-8 text-center text-slate-400">
+                            No terminal reports generated for this student yet.
+                            <a href="{% url 'results:report_card' student.id %}" class="text-indigo-600 underline font-semibold ml-1">Open current term card</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Fee Invoices & Payment History -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div>
+                <h3 class="text-base font-bold text-slate-900">Fee Invoices & Payment History</h3>
+                <p class="text-xs text-slate-500">School fees billed and official receipts</p>
+            </div>
+            {% if user.is_accountant or user.is_principal %}
+            <a href="{% url 'finance:record_payment' %}" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition">
+                + Record Payment
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-3.5">Invoice No</th>
+                        <th class="px-6 py-3.5">Session / Term</th>
+                        <th class="px-6 py-3.5">Total Billed</th>
+                        <th class="px-6 py-3.5">Amount Paid</th>
+                        <th class="px-6 py-3.5">Balance</th>
+                        <th class="px-6 py-3.5">Status</th>
+                        <th class="px-6 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                    {% for inv in invoices %}
+                    <tr class="hover:bg-slate-50/50">
+                        <td class="px-6 py-3.5 font-mono font-bold text-indigo-600">{{ inv.invoice_number }}</td>
+                        <td class="px-6 py-3.5 text-slate-800">{{ inv.academic_session.name }} - {{ inv.academic_term.term_type }}</td>
+                        <td class="px-6 py-3.5 font-bold text-slate-900">{{ school_setting.currency_symbol }}{{ inv.total_amount|intcomma }}</td>
+                        <td class="px-6 py-3.5 font-bold text-emerald-600">{{ school_setting.currency_symbol }}{{ inv.amount_paid|intcomma }}</td>
+                        <td class="px-6 py-3.5 font-bold {% if inv.balance > 0 %}text-rose-600{% else %}text-slate-400{% endif %}">{{ school_setting.currency_symbol }}{{ inv.balance|intcomma }}</td>
+                        <td class="px-6 py-3.5">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold {% if inv.status == 'PAID' %}bg-emerald-50 text-emerald-700{% elif inv.status == 'PARTIAL' %}bg-amber-50 text-amber-700{% else %}bg-rose-50 text-rose-700{% endif %}">
+                                {{ inv.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-3.5 text-right space-x-2">
+                            <a href="{% url 'finance:invoice_detail' inv.pk %}" class="text-indigo-600 hover:text-indigo-800 font-bold">Details</a>
+                            {% if inv.balance > 0 and user.is_accountant %}
+                            <a href="{% url 'finance:record_payment' %}?invoice_id={{ inv.pk }}" class="text-emerald-600 hover:text-emerald-800 font-bold">Pay</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-8 text-center text-slate-400">No invoices generated for this student.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
