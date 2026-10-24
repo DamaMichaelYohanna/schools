@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Delete Invoice #{{ invoice.invoice_number }} | {{ school_setting.school_name }}{% endblock %}
+{% block header_title %}Confirm Invoice Deletion{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+
+    <!-- Back Navigation -->
+    <div>
+        <a href="{% url 'finance:invoice_detail' invoice.pk %}" class="inline-flex items-center text-xs font-bold text-slate-500 hover:text-indigo-600 transition">
+            &larr; Back to Invoice #{{ invoice.invoice_number }}
+        </a>
+    </div>
+
+    <!-- Confirmation Card -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs space-y-6">
+        
+        <!-- Header -->
+        <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl {% if has_payments %}bg-amber-50 text-amber-600 border border-amber-200{% else %}bg-rose-50 text-rose-600 border border-rose-200{% endif %} flex items-center justify-center shrink-0">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </div>
+            <div>
+                <h2 class="text-xl font-extrabold text-slate-900">
+                    {% if has_payments %}
+                    Cannot Delete Invoice #{{ invoice.invoice_number }}
+                    {% else %}
+                    Delete Invoice #{{ invoice.invoice_number }}?
+                    {% endif %}
+                </h2>
+                <p class="text-xs text-slate-500 mt-0.5">Student fee billing record & transaction check</p>
+            </div>
+        </div>
+
+        <!-- Invoice Details Snapshot -->
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+            <div class="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                    <span class="text-slate-400 block text-[10px] uppercase font-bold">Student</span>
+                    <strong class="text-slate-900">{{ invoice.student.full_name }}</strong>
+                    <span class="text-slate-500 block text-[11px]">({{ invoice.student.admission_number }})</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-[10px] uppercase font-bold">Class & Term</span>
+                    <span class="text-slate-800 font-semibold">{{ invoice.student.current_class.display_name }}</span>
+                    <span class="text-slate-500 block text-[11px]">{{ invoice.academic_session.name }} &bull; {{ invoice.academic_term.term_type }}</span>
+                </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-200/70 grid grid-cols-3 gap-2 text-center">
+                <div class="p-2.5 rounded-xl bg-white border border-slate-200">
+                    <span class="text-[10px] text-slate-400 uppercase font-bold block">Total Billed</span>
+                    <span class="text-xs font-extrabold text-slate-900">{{ school_setting.currency_symbol }}{{ invoice.total_amount|intcomma }}</span>
+                </div>
+                <div class="p-2.5 rounded-xl bg-white border border-slate-200">
+                    <span class="text-[10px] text-slate-400 uppercase font-bold block">Amount Paid</span>
+                    <span class="text-xs font-extrabold text-emerald-600">{{ school_setting.currency_symbol }}{{ invoice.amount_paid|intcomma }}</span>
+                </div>
+                <div class="p-2.5 rounded-xl bg-white border border-slate-200">
+                    <span class="text-[10px] text-slate-400 uppercase font-bold block">Balance</span>
+                    <span class="text-xs font-extrabold text-rose-600">{{ school_setting.currency_symbol }}{{ invoice.balance|intcomma }}</span>
+                </div>
+            </div>
+        </div>
+
+        {% if has_payments %}
+        <!-- Blocked Notice -->
+        <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 space-y-2">
+            <div class="flex items-center space-x-2">
+                <svg class="w-4 h-4 text-amber-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+                <h4 class="text-xs font-extrabold">Deletion Prevented by Accounting Policy</h4>
+            </div>
+            <p class="text-[11px] text-amber-800 leading-relaxed">
+                This invoice has <strong>{{ invoice.payments.count }} recorded payment receipt(s)</strong> totaling 
+                <strong>{{ school_setting.currency_symbol }}{{ invoice.amount_paid|intcomma }}</strong>. 
+                Financial regulations prohibit deleting invoices with associated payments because doing so destroys transaction reconciliation and official receipts.
+            </p>
+        </div>
+
+        <div class="flex items-center justify-end space-x-3 pt-2">
+            <a href="{% url 'finance:invoice_detail' invoice.pk %}"
+                class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition">
+                Return to Invoice
+            </a>
+        </div>
+        {% else %}
+        <!-- Safe to Delete Form -->
+        <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs space-y-1">
+            <p class="font-bold">Are you sure you want to permanently delete this invoice?</p>
+            <p class="text-[11px] text-rose-700">Since no payments have been collected on this invoice, it is safe to remove. This action will be recorded in the system audit log.</p>
+        </div>
+
+        <form method="POST" class="flex items-center justify-end space-x-3 pt-2">
+            {% csrf_token %}
+            <a href="{% url 'finance:invoice_detail' invoice.pk %}"
+                class="px-4 py-2.5 border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition">
+                Cancel
+            </a>
+            <button type="submit"
+                class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-xs transition cursor-pointer">
+                Confirm Delete Invoice
+            </button>
+        </form>
+        {% endif %}
+
+    </div>
+
+</div>
+{% endblock %}

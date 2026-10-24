@@ -101,6 +101,43 @@ def invoice_detail_view(request, pk):
 
 @login_required
 @accountant_required
+def invoice_delete_view(request, pk):
+    invoice = get_object_or_404(
+        Invoice.objects.select_related('student', 'academic_session', 'academic_term'),
+        pk=pk
+    )
+
+    has_payments = invoice.payments.exists() or invoice.amount_paid > Decimal('0.00')
+
+    if request.method == 'POST':
+        if has_payments:
+            messages.error(
+                request,
+                f"Cannot delete Invoice #{invoice.invoice_number} because {invoice.payments.count()} payment receipt(s) have been issued against it. Accounting rules require payments to be reversed or refunded first."
+            )
+            return redirect('finance:invoice_detail', pk=invoice.pk)
+
+        invoice_num = invoice.invoice_number
+        student_name = invoice.student.full_name
+        invoice.delete()
+
+        AuditLog.objects.create(
+            user=request.user,
+            action='DELETE_INVOICE',
+            details=f"Deleted unpaid invoice #{invoice_num} for student {student_name}"
+        )
+
+        messages.success(request, f"Invoice #{invoice_num} for {student_name} was deleted successfully.")
+        return redirect('finance:invoices_list')
+
+    return render(request, 'finance/invoice_confirm_delete.html', {
+        'invoice': invoice,
+        'has_payments': has_payments,
+    })
+
+
+@login_required
+@accountant_required
 def record_payment_view(request):
     invoice_id = request.GET.get('invoice_id')
     initial_data = {}

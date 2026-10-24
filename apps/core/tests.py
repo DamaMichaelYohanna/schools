@@ -219,3 +219,43 @@ class SchoolManagementSystemTestCase(TestCase):
 
         setting = SchoolSetting.load()
         self.assertEqual(setting.current_term, term2)
+
+    def test_delete_unpaid_invoice(self):
+        self.client.login(username='accountant_test', password='password123')
+        unpaid_invoice = Invoice.objects.create(
+            student=self.student2,
+            academic_session=self.session,
+            academic_term=self.term,
+            total_amount=Decimal('45000.00')
+        )
+        inv_id = unpaid_invoice.id
+        inv_num = unpaid_invoice.invoice_number
+
+        # Post delete request
+        response = self.client.post(reverse('finance:invoice_delete', kwargs={'pk': inv_id}))
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Invoice.objects.filter(id=inv_id).exists())
+        self.assertTrue(AuditLog.objects.filter(action='DELETE_INVOICE', details__icontains=inv_num).exists())
+
+    def test_delete_invoice_with_payments_blocked(self):
+        self.client.login(username='accountant_test', password='password123')
+        paid_invoice = Invoice.objects.create(
+            student=self.student1,
+            academic_session=self.session,
+            academic_term=self.term,
+            total_amount=Decimal('50000.00')
+        )
+        Payment.objects.create(
+            invoice=paid_invoice,
+            amount=Decimal('20000.00'),
+            payment_method=Payment.MethodChoices.CASH,
+            received_by=self.accountant
+        )
+        paid_invoice.refresh_from_db()
+        self.assertEqual(paid_invoice.amount_paid, Decimal('20000.00'))
+
+        # Post delete request should be refused
+        response = self.client.post(reverse('finance:invoice_delete', kwargs={'pk': paid_invoice.pk}))
+        self.assertEqual(response.status_code, 302)
+        # Invoice MUST still exist!
+        self.assertTrue(Invoice.objects.filter(id=paid_invoice.id).exists())
