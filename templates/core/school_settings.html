@@ -6,155 +6,565 @@
 {% block content %}
 <div class="max-w-5xl mx-auto space-y-8">
 
-    <!-- Header Banner -->
+    <!-- Top Action Bar -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
-            <h1 class="text-2xl font-extrabold text-slate-900">School Identity & Branding</h1>
-            <p class="text-sm text-slate-500">Database-controlled school emblem, official name, grading parameters, and active calendar.</p>
+            <div class="flex items-center space-x-2.5">
+                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">School Identity & Branding</h1>
+                <span id="viewModeBadge"
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <svg class="w-3 h-3 mr-1 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    Protected (View Only)
+                </span>
+                <span id="editModeBadge"
+                    class="hidden inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                    <svg class="w-3 h-3 mr-1 text-amber-500 animate-pulse" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Editing Mode Active
+                </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Database-controlled school emblem, official name, grading parameters,
+                and active calendar.</p>
         </div>
-        <div class="flex items-center space-x-2">
-            <a href="/admin/core/schoolsetting/1/change/" target="_blank" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition inline-flex items-center space-x-1.5 border border-slate-200">
-                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                <span>Open in Django Admin</span>
-            </a>
+
+        <div class="flex items-center space-x-2.5">
+            <!-- Update Button (Shown in View Mode) -->
+            <button id="btnOpenEdit" type="button" onclick="toggleEditMode(true)"
+                class="inline-flex items-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl text-xs font-bold shadow-xs transition duration-150 cursor-pointer">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Update Settings
+            </button>
+
+            <!-- Cancel Button (Shown in Edit Mode) -->
+            <button id="btnCancelEditTop" type="button" onclick="toggleEditMode(false)"
+                class="hidden inline-flex items-center px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition duration-150 cursor-pointer">
+                Cancel
+            </button>
+
+
         </div>
     </div>
 
-    <!-- Live Preview Strip -->
-    <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-center gap-6">
-        <div class="w-24 h-24 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center p-2 shrink-0">
-            {% if setting.school_logo %}
-                <img src="{{ setting.school_logo.url }}" alt="School Crest Preview" class="max-w-full max-h-full object-contain">
-            {% else %}
-                <div class="w-16 h-16 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-2xl font-bold">
-                    {{ setting.school_name|slice:":1" }}
+
+    <!-- ========================================== -->
+    <!-- 1. VIEW-ONLY MODE (Protected Default View)  -->
+    <!-- ========================================== -->
+    <div id="viewSection" class="space-y-6">
+
+        <!-- Banner Notice -->
+        <div
+            class="bg-indigo-50/70 border border-indigo-200/80 rounded-2xl p-4 flex items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-700 shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                 </div>
-            {% endif %}
-        </div>
-        <div class="flex-1 text-center md:text-left space-y-1">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">Live Branding Preview</span>
-            <h2 class="text-xl font-extrabold text-slate-900">{{ setting.school_name }}</h2>
-            <p class="text-xs text-slate-500 italic">"{{ setting.school_motto }}"</p>
-            <p class="text-xs text-slate-600">{{ setting.address }} &bull; {{ setting.phone }} &bull; {{ setting.email }}</p>
-        </div>
-    </div>
-
-    <!-- Edit Settings Form -->
-    <form method="POST" enctype="multipart/form-data" class="space-y-8 bg-white rounded-3xl p-6 sm:p-10 border border-slate-200/80 shadow-xs">
-        {% csrf_token %}
-
-        <!-- Section 1: Official Identity -->
-        <div>
-            <h3 class="text-base font-bold text-slate-900 mb-1">1. School Name & Official Crest</h3>
-            <p class="text-xs text-slate-500 mb-5">These appear on official student terminal report sheets, invoices, and payment receipts.</p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div class="md:col-span-2">
-                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Official School Name *</label>
-                    {{ form.school_name }}
-                    {% if form.school_name.errors %}<p class="text-xs text-rose-500 mt-1">{{ form.school_name.errors.0 }}</p>{% endif %}
-                </div>
-
-                <div class="md:col-span-2">
-                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">School Motto / Slogan *</label>
-                    {{ form.school_motto }}
-                    {% if form.school_motto.errors %}<p class="text-xs text-rose-500 mt-1">{{ form.school_motto.errors.0 }}</p>{% endif %}
-                </div>
-
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Upload School Logo / Crest</label>
-                    {{ form.school_logo }}
-                    <p class="text-[11px] text-slate-400 mt-1">Recommended: Square PNG/JPEG image (e.g. 512x512)</p>
-                    {% if form.school_logo.errors %}<p class="text-xs text-rose-500 mt-1">{{ form.school_logo.errors.0 }}</p>{% endif %}
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Principal Digital Signature</label>
-                    {{ form.principal_signature }}
-                    <p class="text-[11px] text-slate-400 mt-1">Transparent PNG for automated report card signing</p>
-                    {% if form.principal_signature.errors %}<p class="text-xs text-rose-500 mt-1">{{ form.principal_signature.errors.0 }}</p>{% endif %}
+                    <p class="text-xs font-bold text-slate-800">Protected School Profile</p>
+                    <p class="text-[11px] text-slate-600">Settings are locked in read-only mode to prevent accidental
+                        changes. Click <strong>"Update Settings"</strong> to modify institutional parameters.</p>
                 </div>
             </div>
+            <button type="button" onclick="toggleEditMode(true)"
+                class="px-3.5 py-1.5 bg-white hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 hover:border-indigo-600 rounded-xl text-xs font-bold shadow-xs transition cursor-pointer shrink-0">
+                Update Settings &rarr;
+            </button>
         </div>
 
-        <hr class="border-slate-100">
-
-        <!-- Section 2: Contact Details -->
-        <div>
-            <h3 class="text-base font-bold text-slate-900 mb-1">2. Contact Information & Physical Address</h3>
-            <p class="text-xs text-slate-500 mb-5">Used for headers and footers on documents and public communications.</p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">School Email Address</label>
-                    {{ form.email }}
+        <!-- Section 1: Official Emblem & Identity Card -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs space-y-6">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div class="flex items-center space-x-3">
+                    <div
+                        class="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    </div>
+                    <h2 class="text-base font-extrabold text-slate-900">Official Identity & Digital Branding</h2>
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Official Telephone Number(s)</label>
-                    {{ form.phone }}
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Website URL (optional)</label>
-                    {{ form.website }}
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Currency Symbol</label>
-                    {{ form.currency_symbol }}
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Physical Campus Address</label>
-                    {{ form.address }}
-                </div>
+                <span class="text-xs text-slate-400">Institutional Profile</span>
             </div>
-        </div>
 
-        <hr class="border-slate-100">
-
-        <!-- Section 3: Academic Calendar & Scoring Scale -->
-        <div>
-            <h3 class="text-base font-bold text-slate-900 mb-1">3. Academic Session, Active Term & Scoring Limits</h3>
-            <p class="text-xs text-slate-500 mb-5">Configure the default active term and continuous assessment maximum mark allocation.</p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Active Academic Session</label>
-                    {{ form.current_session }}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+                <!-- Official Crest -->
+                <div
+                    class="flex flex-col items-center justify-center p-6 rounded-2xl bg-slate-50 border border-slate-200/80 text-center space-y-3">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">School Emblem /
+                        Crest</span>
+                    <div
+                        class="w-32 h-32 rounded-2xl bg-white border border-slate-200 flex items-center justify-center p-2 shadow-xs overflow-hidden">
+                        {% if setting.school_logo %}
+                        <img src="{{ setting.school_logo.url }}" alt="{{ setting.school_name }} Crest"
+                            class="max-w-full max-h-full object-contain">
+                        {% else %}
+                        <div
+                            class="w-20 h-20 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-3xl font-black">
+                            {{ setting.school_name|slice:":1" }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% if setting.school_logo %}
+                    <span class="text-[11px] font-semibold text-emerald-600 flex items-center justify-center">
+                        <svg class="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        Custom Logo Active
+                    </span>
+                    {% else %}
+                    <span class="text-[11px] text-slate-400">Default Avatar in Use</span>
+                    {% endif %}
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Active Academic Term</label>
-                    {{ form.current_term }}
-                </div>
 
-                <div class="md:col-span-2 bg-slate-50 p-5 rounded-2xl border border-slate-200/80">
-                    <label class="block text-xs font-bold text-slate-800 uppercase mb-2">Score Assessment Weighting (Must sum to 100%)</label>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <div>
-                            <span class="block text-[11px] font-semibold text-slate-600 mb-1">CA 1 Max</span>
-                            {{ form.ca1_max }}
+                <!-- School Name & Motto -->
+                <div class="md:col-span-2 space-y-5">
+                    <div>
+                        <span
+                            class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">Official
+                            School Name</span>
+                        <h3 class="text-2xl font-black text-slate-900 tracking-tight">{{ setting.school_name }}</h3>
+                    </div>
+
+                    <div>
+                        <span
+                            class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">School
+                            Motto / Slogan</span>
+                        <div
+                            class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 text-sm font-semibold italic text-slate-700">
+                            &ldquo;{{ setting.school_motto }}&rdquo;
                         </div>
-                        <div>
-                            <span class="block text-[11px] font-semibold text-slate-600 mb-1">CA 2 Max</span>
-                            {{ form.ca2_max }}
-                        </div>
-                        <div>
-                            <span class="block text-[11px] font-semibold text-slate-600 mb-1">CA 3 / Project</span>
-                            {{ form.ca3_max }}
-                        </div>
-                        <div>
-                            <span class="block text-[11px] font-semibold text-slate-600 mb-1">Exam Max</span>
-                            {{ form.exam_max }}
+                    </div>
+
+                    <!-- Digital Principal Signature -->
+                    <div>
+                        <span
+                            class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">Principal
+                            Digital Signature (Terminal Reports)</span>
+                        <div
+                            class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+                            {% if setting.principal_signature %}
+                            <div class="flex items-center space-x-4">
+                                <div
+                                    class="h-12 w-28 bg-white border border-slate-200 rounded-lg p-1 flex items-center justify-center overflow-hidden">
+                                    <img src="{{ setting.principal_signature.url }}" alt="Principal Signature"
+                                        class="max-h-full max-w-full object-contain">
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold text-emerald-700 flex items-center">
+                                        <svg class="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd"
+                                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                        Digital Signature Configured
+                                    </span>
+                                    <p class="text-[11px] text-slate-500">Auto-stamped on printed student report cards
+                                    </p>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="flex items-center space-x-3 text-slate-400 text-xs">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                                <span>No digital signature uploaded yet (Manual physical signing required)</span>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Submit Button -->
-        <div class="pt-4 flex items-center justify-end space-x-3">
-            <a href="{% url 'core:dashboard' %}" class="px-5 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition">
-                Cancel
-            </a>
-            <button type="submit" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition cursor-pointer">
-                Save & Apply School Settings
+        <!-- Section 2: Contact Information & Campus Address -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs space-y-6">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div class="flex items-center space-x-3">
+                    <div
+                        class="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <h2 class="text-base font-extrabold text-slate-900">Official Contact & Campus Location</h2>
+                </div>
+                <span class="text-xs text-slate-400">Public & Document Info</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Email -->
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/70">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">Official
+                        Email</span>
+                    <p class="text-xs font-bold text-slate-800 break-all">{{ setting.email|default:"Not specified" }}
+                    </p>
+                </div>
+
+                <!-- Phone -->
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/70">
+                    <span
+                        class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">Telephone</span>
+                    <p class="text-xs font-bold text-slate-800">{{ setting.phone|default:"Not specified" }}</p>
+                </div>
+
+                <!-- Website -->
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/70">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">Official
+                        Website</span>
+                    {% if setting.website %}
+                    <a href="{{ setting.website }}" target="_blank"
+                        class="text-xs font-bold text-indigo-600 hover:text-indigo-700 underline truncate block">
+                        {{ setting.website }}
+                    </a>
+                    {% else %}
+                    <p class="text-xs font-semibold text-slate-400">None configured</p>
+                    {% endif %}
+                </div>
+
+                <!-- Currency -->
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/70">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">Fee
+                        Currency Symbol</span>
+                    <p class="text-sm font-black text-slate-900">{{ setting.currency_symbol }} <span
+                            class="text-xs font-normal text-slate-500">(e.g. {{ setting.currency_symbol }}50,000)</span>
+                    </p>
+                </div>
+
+                <!-- Address -->
+                <div class="sm:col-span-2 md:col-span-4 p-4 rounded-2xl bg-slate-50 border border-slate-200/70">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">Physical
+                        Campus Address</span>
+                    <p class="text-xs font-bold text-slate-800 leading-relaxed">{{ setting.address|default:"Not
+                        specified" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Assessment Score Weights & Active Calendar -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs space-y-6">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div class="flex items-center space-x-3">
+                    <div
+                        class="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </div>
+                    <h2 class="text-base font-extrabold text-slate-900">Assessment Score Scale & Academic Calendar</h2>
+                </div>
+                <a href="{% url 'academics:calendar' %}"
+                    class="text-xs font-bold text-indigo-600 hover:text-indigo-700">
+                    Academic Calendar &rarr;
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Assessment Weights -->
+                <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-extrabold text-slate-900">Score Assessment Weights</span>
+                        <span class="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">Total:
+                            100%</span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+                        <div class="p-2.5 bg-white rounded-xl border border-slate-200 text-center">
+                            <span class="text-[10px] text-slate-400 block font-semibold">CA 1 Test</span>
+                            <span class="text-base font-extrabold text-slate-800">{{ setting.ca1_max }}%</span>
+                        </div>
+                        <div class="p-2.5 bg-white rounded-xl border border-slate-200 text-center">
+                            <span class="text-[10px] text-slate-400 block font-semibold">CA 2 Test</span>
+                            <span class="text-base font-extrabold text-slate-800">{{ setting.ca2_max }}%</span>
+                        </div>
+                        <div class="p-2.5 bg-white rounded-xl border border-slate-200 text-center">
+                            <span class="text-[10px] text-slate-400 block font-semibold">CA 3 / Project</span>
+                            <span class="text-base font-extrabold text-slate-800">{{ setting.ca3_max }}%</span>
+                        </div>
+                        <div class="p-2.5 bg-white rounded-xl border border-slate-200 text-center">
+                            <span class="text-[10px] text-slate-400 block font-semibold">Exam</span>
+                            <span class="text-base font-extrabold text-indigo-600">{{ setting.exam_max }}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active System Status -->
+                <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-extrabold text-slate-900">Currently Active System-Wide</span>
+                        <a href="{% url 'academics:calendar' %}"
+                            class="text-[11px] font-bold text-emerald-700 hover:text-emerald-800">
+                            Change &rarr;
+                        </a>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 pt-1">
+                        <div class="p-3 bg-white rounded-xl border border-slate-200">
+                            <span class="text-[10px] text-slate-400 block font-semibold">Active Session</span>
+                            <span class="text-sm font-extrabold text-indigo-700">{{
+                                setting.current_session.name|default:"Not selected" }}</span>
+                        </div>
+                        <div class="p-3 bg-white rounded-xl border border-slate-200">
+                            <span class="text-[10px] text-slate-400 block font-semibold">Active Term</span>
+                            <span class="text-sm font-extrabold text-emerald-700">{{
+                                setting.current_term.term_type|default:"Not selected" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- 2. EDIT MODE (Revealed on 'Update Settings')-->
+    <!-- ========================================== -->
+    <div id="editSection" class="hidden space-y-6">
+
+        <!-- Editing Alert Banner -->
+        <div
+            class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-amber-900">Editing Mode Enabled</p>
+                    <p class="text-[11px] text-amber-700">Any updates to school name, crest, or details will immediately
+                        apply to student reports and receipts. Click <strong>"Cancel"</strong> to exit without saving.
+                    </p>
+                </div>
+            </div>
+            <button type="button" onclick="toggleEditMode(false)"
+                class="px-3.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition cursor-pointer self-start sm:self-auto shrink-0">
+                Cancel Editing
             </button>
         </div>
-    </form>
+
+        <!-- Edit Settings Form -->
+        <form method="POST" enctype="multipart/form-data"
+            class="space-y-8 bg-white rounded-3xl p-6 sm:p-10 border border-slate-200/80 shadow-xs">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold">
+                {{ form.non_field_errors.0 }}
+            </div>
+            {% endif %}
+
+            <!-- Section 1: Official Identity -->
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900 mb-1">1. School Name & Official Crest</h3>
+                <p class="text-xs text-slate-500 mb-5">These appear on official student terminal report sheets,
+                    invoices, and payment receipts.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Official School Name
+                            <span class="text-rose-500">*</span></label>
+                        {{ form.school_name }}
+                        {% if form.school_name.errors %}
+                        <p class="text-xs text-rose-500 font-semibold mt-1">{{ form.school_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">School Motto / Slogan
+                            <span class="text-rose-500">*</span></label>
+                        {{ form.school_motto }}
+                        {% if form.school_motto.errors %}
+                        <p class="text-xs text-rose-500 font-semibold mt-1">{{ form.school_motto.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Upload School Logo /
+                            Crest</label>
+                        {{ form.school_logo }}
+                        <p class="text-[11px] text-slate-400 mt-1">Recommended: Square PNG/JPEG image (e.g. 512x512)</p>
+                        {% if form.school_logo.errors %}
+                        <p class="text-xs text-rose-500 font-semibold mt-1">{{ form.school_logo.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Principal Digital
+                            Signature</label>
+                        {{ form.principal_signature }}
+                        <p class="text-[11px] text-slate-400 mt-1">Transparent PNG for automated report card signing</p>
+                        {% if form.principal_signature.errors %}
+                        <p class="text-xs text-rose-500 font-semibold mt-1">{{ form.principal_signature.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-slate-100">
+
+            <!-- Section 2: Contact Details -->
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900 mb-1">2. Contact Information & Physical Address</h3>
+                <p class="text-xs text-slate-500 mb-5">Used for headers and footers on documents and public
+                    communications.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">School Email
+                            Address</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                        <p class="text-xs text-rose-500 font-semibold mt-1">{{ form.email.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Official Telephone
+                            Number(s)</label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                        <p class="text-xs text-rose-500 font-semibold mt-1">{{ form.phone.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Website URL
+                            (optional)</label>
+                        {{ form.website }}
+                        {% if form.website.errors %}
+                        <p class="text-xs text-rose-500 font-semibold mt-1">{{ form.website.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Currency Symbol</label>
+                        {{ form.currency_symbol }}
+                        {% if form.currency_symbol.errors %}
+                        <p class="text-xs text-rose-500 font-semibold mt-1">{{ form.currency_symbol.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Physical Campus
+                            Address</label>
+                        {{ form.address }}
+                        {% if form.address.errors %}
+                        <p class="text-xs text-rose-500 font-semibold mt-1">{{ form.address.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-slate-100">
+
+            <!-- Section 3: Scoring Scale (Must sum to 100) -->
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900 mb-1">3. Score Assessment Weighting</h3>
+                <p class="text-xs text-slate-500 mb-5">Configure Continuous Assessment marks and Terminal Examination
+                    max scores (Standard: CA 40% + Exam 60% = 100%).</p>
+                <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200/80">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div>
+                            <span class="block text-[11px] font-bold text-slate-700 mb-1">CA 1 Max</span>
+                            {{ form.ca1_max }}
+                            {% if form.ca1_max.errors %}
+                            <p class="text-xs text-rose-500 font-semibold mt-1">{{ form.ca1_max.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <span class="block text-[11px] font-bold text-slate-700 mb-1">CA 2 Max</span>
+                            {{ form.ca2_max }}
+                            {% if form.ca2_max.errors %}
+                            <p class="text-xs text-rose-500 font-semibold mt-1">{{ form.ca2_max.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <span class="block text-[11px] font-bold text-slate-700 mb-1">CA 3 / Project</span>
+                            {{ form.ca3_max }}
+                            {% if form.ca3_max.errors %}
+                            <p class="text-xs text-rose-500 font-semibold mt-1">{{ form.ca3_max.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <span class="block text-[11px] font-bold text-slate-700 mb-1">Exam Max</span>
+                            {{ form.exam_max }}
+                            {% if form.exam_max.errors %}
+                            <p class="text-xs text-rose-500 font-semibold mt-1">{{ form.exam_max.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="pt-4 flex items-center justify-end space-x-3 border-t border-slate-100">
+                <button type="button" onclick="toggleEditMode(false)"
+                    class="px-5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl border border-slate-300 transition cursor-pointer">
+                    Cancel
+                </button>
+                <button type="submit"
+                    class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition cursor-pointer">
+                    Save & Apply School Settings
+                </button>
+            </div>
+        </form>
+    </div>
+
 </div>
+
+<script>
+    function toggleEditMode(enable) {
+        const viewSection = document.getElementById('viewSection');
+        const editSection = document.getElementById('editSection');
+        const viewModeBadge = document.getElementById('viewModeBadge');
+        const editModeBadge = document.getElementById('editModeBadge');
+        const btnOpenEdit = document.getElementById('btnOpenEdit');
+        const btnCancelEditTop = document.getElementById('btnCancelEditTop');
+
+        if (enable) {
+            viewSection.classList.add('hidden');
+            editSection.classList.remove('hidden');
+            viewModeBadge.classList.add('hidden');
+            editModeBadge.classList.remove('hidden');
+            btnOpenEdit.classList.add('hidden');
+            btnCancelEditTop.classList.remove('hidden');
+            window.scrollTo({ top: editSection.offsetTop - 30, behavior: 'smooth' });
+        } else {
+            editSection.classList.add('hidden');
+            viewSection.classList.remove('hidden');
+            editModeBadge.classList.add('hidden');
+            viewModeBadge.classList.remove('hidden');
+            btnCancelEditTop.classList.add('hidden');
+            btnOpenEdit.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    // Auto-open edit mode if validation errors exist on postback
+    {% if form.errors %}
+    document.addEventListener('DOMContentLoaded', function () {
+        toggleEditMode(true);
+    });
+    {% endif %}
+
+    // Support ?edit=1 in URL
+    document.addEventListener('DOMContentLoaded', function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('edit') === '1') {
+            toggleEditMode(true);
+        }
+    });
+</script>
 {% endblock %}
