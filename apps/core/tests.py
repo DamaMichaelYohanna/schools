@@ -315,3 +315,43 @@ class SchoolManagementSystemTestCase(TestCase):
         page_obj2 = response_page2.context['page_obj']
         self.assertEqual(page_obj2.number, 2)
         self.assertTrue(page_obj2.has_previous())
+
+    def test_class_edit_view_assign_teacher_to_unassigned_class(self):
+        self.client.login(username='principal_test', password='password123')
+        # Create unassigned class
+        unassigned_class = ClassSection.objects.create(
+            class_level=self.level,
+            name="C",
+            class_teacher=None
+        )
+        self.assertIsNone(unassigned_class.class_teacher)
+
+        # GET class detail shows unassigned
+        detail_res = self.client.get(reverse('academics:class_detail', kwargs={'pk': unassigned_class.pk}))
+        self.assertEqual(detail_res.status_code, 200)
+        self.assertContains(detail_res, "Unassigned")
+        self.assertContains(detail_res, reverse('academics:class_edit', kwargs={'pk': unassigned_class.pk}))
+
+        # GET class edit form
+        edit_get_res = self.client.get(reverse('academics:class_edit', kwargs={'pk': unassigned_class.pk}))
+        self.assertEqual(edit_get_res.status_code, 200)
+
+        # POST update assigning teacher
+        post_res = self.client.post(reverse('academics:class_edit', kwargs={'pk': unassigned_class.pk}), {
+            'class_level': self.level.id,
+            'name': 'C',
+            'class_teacher': self.teacher.id
+        })
+        self.assertEqual(post_res.status_code, 302)
+        self.assertRedirects(post_res, reverse('academics:class_detail', kwargs={'pk': unassigned_class.pk}))
+
+        unassigned_class.refresh_from_db()
+        self.assertEqual(unassigned_class.class_teacher, self.teacher)
+        self.assertTrue(AuditLog.objects.filter(action='UPDATE_CLASS').exists())
+
+    def test_class_edit_permission_guard(self):
+        # Teacher without principal privileges cannot edit classes
+        self.client.login(username='teacher_test', password='password123')
+        response = self.client.get(reverse('academics:class_edit', kwargs={'pk': self.class_section.pk}))
+        self.assertEqual(response.status_code, 302)
+

@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Count
+from django.urls import reverse
 
 from .models import ClassLevel, ClassSection, Subject, SubjectAllocation, AcademicSession, AcademicTerm
 from .forms import SubjectAllocationForm, SubjectForm, ClassSectionForm, AcademicSessionForm, AcademicTermForm
@@ -43,6 +44,13 @@ def class_create_view(request):
         form = ClassSectionForm(request.POST)
         if form.is_valid():
             new_cls = form.save()
+            teacher_name = new_cls.class_teacher.full_name if new_cls.class_teacher else "Unassigned"
+            AuditLog.objects.create(
+                user=request.user,
+                action='CREATE_CLASS',
+                ip_address=request.META.get('REMOTE_ADDR'),
+                details=f"Created class '{new_cls.display_name}' (Assigned Teacher: {teacher_name})"
+            )
             messages.success(request, f"Class arm '{new_cls.display_name}' created successfully.")
             return redirect('academics:class_list')
         else:
@@ -55,6 +63,36 @@ def class_create_view(request):
         'title': 'Add Class Arm / Section',
         'button_text': 'Create Class',
         'back_url': 'academics:class_list',
+    })
+
+
+@login_required
+@principal_required
+def class_edit_view(request, pk):
+    cls = get_object_or_404(ClassSection, pk=pk)
+    if request.method == 'POST':
+        form = ClassSectionForm(request.POST, instance=cls)
+        if form.is_valid():
+            updated_cls = form.save()
+            teacher_name = updated_cls.class_teacher.full_name if updated_cls.class_teacher else "Unassigned"
+            AuditLog.objects.create(
+                user=request.user,
+                action='UPDATE_CLASS',
+                ip_address=request.META.get('REMOTE_ADDR'),
+                details=f"Updated class '{updated_cls.display_name}' (Assigned Teacher: {teacher_name})"
+            )
+            messages.success(request, f"Class arm '{updated_cls.display_name}' updated successfully.")
+            return redirect('academics:class_detail', pk=updated_cls.pk)
+        else:
+            messages.error(request, "Please check the form inputs.")
+    else:
+        form = ClassSectionForm(instance=cls)
+
+    return render(request, 'academics/form_generic.html', {
+        'form': form,
+        'title': f"Edit Class Arm & Assigned Staff: {cls.display_name}",
+        'button_text': 'Save Changes',
+        'cancel_url': reverse('academics:class_detail', kwargs={'pk': cls.pk}),
     })
 
 
@@ -105,9 +143,12 @@ def allocation_list_view(request):
 @principal_required
 def allocation_create_view(request):
     setting = SchoolSetting.load()
+    class_id = request.GET.get('class_id') or request.POST.get('origin_class_id')
     initial_data = {}
     if setting.current_session:
         initial_data['academic_session'] = setting.current_session
+    if class_id:
+        initial_data['class_section'] = class_id
 
     if request.method == 'POST':
         form = SubjectAllocationForm(request.POST)
@@ -116,20 +157,26 @@ def allocation_create_view(request):
             AuditLog.objects.create(
                 user=request.user,
                 action='ALLOCATE_SUBJECT',
+                ip_address=request.META.get('REMOTE_ADDR'),
                 details=f"Assigned {alloc.subject.name} in {alloc.class_section.display_name} to {alloc.teacher.full_name}"
             )
             messages.success(request, f"Allocated {alloc.subject.name} to {alloc.teacher.full_name} for {alloc.class_section.display_name}.")
+            if class_id:
+                return redirect('academics:class_detail', pk=class_id)
             return redirect('academics:allocation_list')
         else:
             messages.error(request, "Could not save allocation. It may already exist for this session.")
     else:
         form = SubjectAllocationForm(initial=initial_data)
 
+    cancel_url = reverse('academics:class_detail', kwargs={'pk': class_id}) if class_id else None
+
     return render(request, 'academics/form_generic.html', {
         'form': form,
         'title': 'Assign Subject to Teacher',
         'button_text': 'Confirm Allocation',
         'back_url': 'academics:allocation_list',
+        'cancel_url': cancel_url,
     })
 
 

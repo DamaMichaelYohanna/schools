@@ -37,6 +37,9 @@ class ClassSectionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['class_teacher'].queryset = User.objects.filter(role=User.Role.TEACHER, is_active_staff=True)
+        self.fields['class_teacher'].required = False
+        self.fields['class_teacher'].empty_label = "--- Select Class Teacher / Staff (Optional) ---"
+        self.fields['class_teacher'].help_text = "Select the designated class teacher/form master. You can also assign or change this anytime later."
 
     class Meta:
         model = ClassSection

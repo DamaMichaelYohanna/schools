@@ -7,6 +7,7 @@ urlpatterns = [
     path('classes/', views.class_list_view, name='class_list'),
     path('classes/create/', views.class_create_view, name='class_create'),
     path('classes/<int:pk>/', views.class_detail_view, name='class_detail'),
+    path('classes/<int:pk>/edit/', views.class_edit_view, name='class_edit'),
     path('subjects/', views.subject_list_view, name='subject_list'),
     path('allocations/', views.allocation_list_view, name='allocation_list'),
     path('allocations/create/', views.allocation_create_view, name='allocation_create'),
