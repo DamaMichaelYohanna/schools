@@ -16,7 +16,15 @@
             </p>
         </div>
 
-        <div class="flex items-center space-x-3">
+        <div class="flex flex-wrap items-center gap-2.5">
+            {% if user.is_principal %}
+            <a href="{% url 'students:promotion' %}?class_id={{ cls.id }}" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center space-x-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+                <span>Promote / Roll Over Class</span>
+            </a>
+            {% endif %}
             <a href="{% url 'results:broadsheet' cls.id %}" class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs transition">
                 View Class Broadsheet
             </a>

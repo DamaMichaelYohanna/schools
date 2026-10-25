@@ -118,10 +118,17 @@
                 </a>
 
                 <!-- Students -->
-                <a href="{% url 'students:student_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium transition hover:bg-slate-800 hover:text-white {% if request.resolver_match.app_name == 'students' %}bg-indigo-600 text-white shadow-sm{% endif %}">
+                <a href="{% url 'students:student_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium transition hover:bg-slate-800 hover:text-white {% if request.resolver_match.app_name == 'students' and request.resolver_match.url_name != 'promotion' %}bg-indigo-600 text-white shadow-sm{% endif %}">
                     <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                     <span>Student Records</span>
                 </a>
+
+                {% if user.is_principal %}
+                <a href="{% url 'students:promotion' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium transition hover:bg-slate-800 hover:text-white {% if request.resolver_match.url_name == 'promotion' %}bg-indigo-600 text-white shadow-sm{% endif %}">
+                    <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                    <span>Bulk Promotion</span>
+                </a>
+                {% endif %}
 
                 <!-- Results & Grading (Teachers / Principal) -->
                 {% if user.is_teacher or user.is_principal %}

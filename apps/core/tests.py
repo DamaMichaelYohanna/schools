@@ -259,3 +259,27 @@ class SchoolManagementSystemTestCase(TestCase):
         self.assertEqual(response.status_code, 302)
         # Invoice MUST still exist!
         self.assertTrue(Invoice.objects.filter(id=paid_invoice.id).exists())
+
+    def test_bulk_student_promotion_and_repeat(self):
+        self.client.login(username='principal_test', password='password123')
+        level2 = ClassLevel.objects.create(name="JSS 2", order=2)
+        target_section = ClassSection.objects.create(class_level=level2, name="A")
+
+        # Student 1 -> PROMOTE to JSS 2A
+        # Student 2 -> REPEAT in JSS 1A
+        response = self.client.post(reverse('students:promotion'), {
+            'source_class_id': self.class_section.id,
+            'selected_students': [self.student1.id, self.student2.id],
+            'decision_' + str(self.student1.id): 'PROMOTE',
+            'target_class_' + str(self.student1.id): target_section.id,
+            'decision_' + str(self.student2.id): 'REPEAT',
+            'target_class_' + str(self.student2.id): self.class_section.id,
+        })
+        self.assertEqual(response.status_code, 302)
+
+        self.student1.refresh_from_db()
+        self.student2.refresh_from_db()
+
+        self.assertEqual(self.student1.current_class, target_section)
+        self.assertEqual(self.student2.current_class, self.class_section)
+        self.assertTrue(AuditLog.objects.filter(action='BULK_PROMOTION').exists())
