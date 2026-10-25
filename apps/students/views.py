@@ -19,6 +19,14 @@ def student_list_view(request):
     query = request.GET.get('q', '').strip()
     class_id = request.GET.get('class_id', '')
     status = request.GET.get('status', 'ACTIVE')
+    page_size_param = request.GET.get('page_size', '10')
+
+    try:
+        page_size = int(page_size_param)
+        if page_size not in [10, 25, 50, 100]:
+            page_size = 10
+    except (ValueError, TypeError):
+        page_size = 10
 
     students = Student.objects.select_related('current_class__class_level').all()
 
@@ -39,10 +47,17 @@ def student_list_view(request):
         )
 
     classes = ClassSection.objects.select_related('class_level').order_by('class_level__order', 'name')
+    total_count = students.count()
 
-    paginator = Paginator(students, 25)
+    paginator = Paginator(students, page_size)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+
+    # Generate elided page range (e.g. [1, 2, '…', 5, 6, 7, '…', 10])
+    try:
+        elided_page_range = paginator.get_elided_page_range(number=page_obj.number, on_each_side=1, on_ends=1)
+    except Exception:
+        elided_page_range = paginator.page_range
 
     return render(request, 'students/student_list.html', {
         'page_obj': page_obj,
@@ -50,7 +65,9 @@ def student_list_view(request):
         'selected_class': class_id,
         'selected_status': status,
         'query': query,
-        'total_count': students.count(),
+        'total_count': total_count,
+        'page_size': page_size,
+        'elided_page_range': elided_page_range,
     })
 
 

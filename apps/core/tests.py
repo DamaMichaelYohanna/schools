@@ -283,3 +283,35 @@ class SchoolManagementSystemTestCase(TestCase):
         self.assertEqual(self.student1.current_class, target_section)
         self.assertEqual(self.student2.current_class, self.class_section)
         self.assertTrue(AuditLog.objects.filter(action='BULK_PROMOTION').exists())
+
+    def test_student_list_pagination(self):
+        self.client.login(username='principal_test', password='password123')
+        # Create additional test students to test pagination
+        for i in range(15):
+            Student.objects.create(
+                admission_number=f"TEST/PAG/{i}",
+                first_name=f"Student{i}",
+                last_name="Test",
+                gender="Male",
+                date_of_birth=date(2013, 1, 1),
+                current_class=self.class_section,
+                guardian_name="Test Guardian",
+                guardian_phone="08000000000"
+            )
+
+        # GET with page_size=10
+        response = self.client.get(reverse('students:student_list'), {'page_size': '10', 'page': '1'})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('page_obj', response.context)
+        page_obj = response.context['page_obj']
+        self.assertEqual(page_obj.paginator.per_page, 10)
+        self.assertTrue(page_obj.has_other_pages())
+        self.assertTrue(page_obj.has_next())
+        self.assertEqual(page_obj.number, 1)
+
+        # GET page 2
+        response_page2 = self.client.get(reverse('students:student_list'), {'page_size': '10', 'page': '2'})
+        self.assertEqual(response_page2.status_code, 200)
+        page_obj2 = response_page2.context['page_obj']
+        self.assertEqual(page_obj2.number, 2)
+        self.assertTrue(page_obj2.has_previous())

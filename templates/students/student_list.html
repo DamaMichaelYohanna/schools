@@ -47,7 +47,7 @@
             </select>
 
             <!-- Status Filter -->
-            <select name="status" class="w-full sm:w-36 px-3 py-2 rounded-xl text-xs border border-slate-300 focus:ring-2 focus:ring-indigo-400 outline-none">
+            <select name="status" class="w-full sm:w-32 px-3 py-2 rounded-xl text-xs border border-slate-300 focus:ring-2 focus:ring-indigo-400 outline-none">
                 <option value="ACTIVE" {% if selected_status == 'ACTIVE' %}selected{% endif %}>Active</option>
                 <option value="GRADUATED" {% if selected_status == 'GRADUATED' %}selected{% endif %}>Graduated</option>
                 <option value="SUSPENDED" {% if selected_status == 'SUSPENDED' %}selected{% endif %}>Suspended</option>
@@ -55,10 +55,18 @@
                 <option value="" {% if selected_status == '' %}selected{% endif %}>All Statuses</option>
             </select>
 
+            <!-- Page Size -->
+            <select name="page_size" onchange="this.form.submit()" class="w-full sm:w-32 px-3 py-2 rounded-xl text-xs border border-slate-300 focus:ring-2 focus:ring-indigo-400 outline-none">
+                <option value="10" {% if page_size == 10 %}selected{% endif %}>10 / page</option>
+                <option value="25" {% if page_size == 25 %}selected{% endif %}>25 / page</option>
+                <option value="50" {% if page_size == 50 %}selected{% endif %}>50 / page</option>
+                <option value="100" {% if page_size == 100 %}selected{% endif %}>100 / page</option>
+            </select>
+
             <button type="submit" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition shrink-0">
                 Filter
             </button>
-            {% if query or selected_class or selected_status != 'ACTIVE' %}
+            {% if query or selected_class or selected_status != 'ACTIVE' or page_size != 10 %}
             <a href="{% url 'students:student_list' %}" class="text-xs text-slate-500 hover:text-slate-800 font-medium">Reset</a>
             {% endif %}
         </form>
@@ -133,20 +141,70 @@
             </table>
         </div>
 
-        <!-- Pagination -->
-        {% if page_obj.has_other_pages %}
-        <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span>Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-            <div class="flex items-center space-x-1">
-                {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_class %}&class_id={{ selected_class }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}" class="px-3 py-1 rounded bg-slate-100 hover:bg-slate-200 font-semibold">Prev</a>
-                {% endif %}
-                {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_class %}&class_id={{ selected_class }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}" class="px-3 py-1 rounded bg-slate-100 hover:bg-slate-200 font-semibold">Next</a>
+        <!-- Pagination Controls -->
+        <div class="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 bg-white">
+            <div>
+                {% if total_count > 0 %}
+                Showing <strong class="font-bold text-slate-900">{{ page_obj.start_index }}</strong> to 
+                <strong class="font-bold text-slate-900">{{ page_obj.end_index }}</strong> of 
+                <strong class="font-bold text-slate-900">{{ total_count }}</strong> student record{{ total_count|pluralize }}
+                {% else %}
+                Showing 0 student records
                 {% endif %}
             </div>
+
+            {% if page_obj.paginator.num_pages > 1 %}
+            <div class="flex items-center space-x-1">
+                <!-- First Page -->
+                {% if page_obj.number > 1 %}
+                <a href="?page=1{% if query %}&q={{ query }}{% endif %}{% if selected_class %}&class_id={{ selected_class }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}&page_size={{ page_size }}"
+                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold transition" title="First Page">
+                    &laquo;
+                </a>
+                {% endif %}
+
+                <!-- Previous Page -->
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_class %}&class_id={{ selected_class }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}&page_size={{ page_size }}"
+                    class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold transition">
+                    &larr; Prev
+                </a>
+                {% endif %}
+
+                <!-- Page Number Links -->
+                {% for p in elided_page_range %}
+                    {% if p == page_obj.paginator.ELLIPSIS %}
+                    <span class="px-2 py-1.5 text-slate-400 font-bold">&hellip;</span>
+                    {% elif p == page_obj.number %}
+                    <span class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-bold shadow-xs">
+                        {{ p }}
+                    </span>
+                    {% else %}
+                    <a href="?page={{ p }}{% if query %}&q={{ query }}{% endif %}{% if selected_class %}&class_id={{ selected_class }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}&page_size={{ page_size }}"
+                        class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold transition">
+                        {{ p }}
+                    </a>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Next Page -->
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_class %}&class_id={{ selected_class }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}&page_size={{ page_size }}"
+                    class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold transition">
+                    Next &rarr;
+                </a>
+                {% endif %}
+
+                <!-- Last Page -->
+                {% if page_obj.number < page_obj.paginator.num_pages %}
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if selected_class %}&class_id={{ selected_class }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}&page_size={{ page_size }}"
+                    class="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold transition" title="Last Page">
+                    &raquo;
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
 
 </div>
