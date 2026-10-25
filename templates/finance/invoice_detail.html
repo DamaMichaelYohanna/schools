@@ -61,6 +61,61 @@
         </div>
     </div>
 
+    <!-- Itemized Fee Structure Breakdown -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div>
+                <h3 class="text-base font-bold text-slate-900">Billed Fee Items Breakdown</h3>
+                <p class="text-xs text-slate-500">Component fee schedule configured for {{ invoice.student.current_class.class_level.name }}</p>
+            </div>
+            <span class="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-200/50">
+                {{ fee_items|length }} Item{{ fee_items|length|pluralize }}
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-3.5">Fee Category / Description</th>
+                        <th class="px-6 py-3.5">Academic Session</th>
+                        <th class="px-6 py-3.5">Term</th>
+                        <th class="px-6 py-3.5 text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                    {% for item in fee_items %}
+                    <tr class="hover:bg-slate-50/50">
+                        <td class="px-6 py-3.5 font-bold text-slate-900 flex items-center space-x-2">
+                            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                            <span>{{ item.fee_category.name }}</span>
+                        </td>
+                        <td class="px-6 py-3.5 font-mono text-slate-500">{{ item.academic_session.name }}</td>
+                        <td class="px-6 py-3.5 text-slate-600">{{ item.academic_term.term_type }}</td>
+                        <td class="px-6 py-3.5 text-right font-bold text-slate-900 font-mono text-sm">
+                            {{ school_setting.currency_symbol }}{{ item.amount|intcomma }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-6 text-slate-400 text-center text-xs">
+                            No individual fee schedule items linked. Total billed amount: {{ school_setting.currency_symbol }}{{ invoice.total_amount|intcomma }}.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="bg-slate-50 font-bold border-t border-slate-200 text-slate-900">
+                    <tr>
+                        <td colspan="3" class="px-6 py-4 text-right uppercase text-xs tracking-wider text-slate-600">Total Cumulative Invoice:</td>
+                        <td class="px-6 py-4 text-right text-indigo-700 font-mono text-base font-extrabold">
+                            {{ school_setting.currency_symbol }}{{ invoice.total_amount|intcomma }}
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
     <!-- Payments Made on this Invoice -->
     <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
         <div class="p-6 border-b border-slate-100">

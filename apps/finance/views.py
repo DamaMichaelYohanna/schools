@@ -90,12 +90,24 @@ def invoices_list_view(request):
 @login_required
 @accountant_required
 def invoice_detail_view(request, pk):
-    invoice = get_object_or_404(Invoice.objects.select_related('student__current_class', 'academic_session', 'academic_term'), pk=pk)
+    invoice = get_object_or_404(
+        Invoice.objects.select_related('student__current_class__class_level', 'academic_session', 'academic_term'),
+        pk=pk
+    )
     payments = invoice.payments.select_related('received_by').order_by('-payment_date', '-created_at')
+
+    fee_items = []
+    if invoice.student.current_class and invoice.student.current_class.class_level:
+        fee_items = FeeStructure.objects.filter(
+            class_level=invoice.student.current_class.class_level,
+            academic_session=invoice.academic_session,
+            academic_term=invoice.academic_term
+        ).select_related('fee_category').order_by('fee_category__name')
 
     return render(request, 'finance/invoice_detail.html', {
         'invoice': invoice,
         'payments': payments,
+        'fee_items': fee_items,
     })
 
 
