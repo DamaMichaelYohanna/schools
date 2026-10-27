@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.forms import AuthenticationForm
 
 User = get_user_model()
@@ -7,19 +7,45 @@ User = get_user_model()
 
 class StaffLoginForm(AuthenticationForm):
     username = forms.CharField(
+        label='Username or Staff ID',
         widget=forms.TextInput(attrs={
-            'class': 'w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition text-slate-800 placeholder-slate-400',
+            'id': 'id_username',
+            'class': 'w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 font-medium text-sm focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/10 transition-all outline-none',
             'placeholder': 'Enter your username or Staff ID',
             'autocomplete': 'username',
         })
     )
     password = forms.CharField(
+        label='Password',
         widget=forms.PasswordInput(attrs={
-            'class': 'w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition text-slate-800 placeholder-slate-400',
+            'id': 'id_password',
+            'class': 'w-full pl-11 pr-11 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 font-medium text-sm focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/10 transition-all outline-none',
             'placeholder': 'Enter your password',
             'autocomplete': 'current-password',
         })
     )
+
+    def clean(self):
+        username = self.cleaned_data.get('username')
+        password = self.cleaned_data.get('password')
+
+        if username and password:
+            clean_username = username.strip()
+            # If user entered staff_id (e.g. STF-2025-001), resolve corresponding username
+            user_by_staff_id = User.objects.filter(staff_id__iexact=clean_username).first()
+            lookup_username = user_by_staff_id.username if user_by_staff_id else clean_username
+
+            self.user_cache = authenticate(
+                self.request,
+                username=lookup_username,
+                password=password
+            )
+            if self.user_cache is None:
+                raise self.get_invalid_login_error()
+            else:
+                self.confirm_login_allowed(self.user_cache)
+
+        return self.cleaned_data
 
 
 class StaffCreationForm(forms.ModelForm):

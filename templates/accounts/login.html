@@ -1,103 +1,392 @@
 {% extends 'base.html' %}
 
-{% block title %}Sign In | {{ school_setting.school_name }}{% endblock %}
+{% block title %}Staff Portal Login | {{ school_setting.school_name }}{% endblock %}
 
 {% block auth_content %}
-<div class="min-h-screen bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-    <!-- Ambient background glow -->
-    <div class="absolute -top-40 -right-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
+<div class="min-h-screen w-full grid grid-cols-1 lg:grid-cols-12 bg-slate-950 font-sans selection:bg-indigo-500 selection:text-white">
 
-    <div class="sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4">
-        <!-- School Crest & Branding -->
-        <div class="text-center">
-            {% if school_setting.school_logo %}
-                <img class="mx-auto h-20 w-20 object-contain rounded-2xl bg-white p-2 shadow-xl ring-1 ring-white/10" src="{{ school_setting.school_logo.url }}" alt="{{ school_setting.school_name }} Logo">
-            {% else %}
-                <div class="mx-auto h-20 w-20 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white text-3xl font-extrabold shadow-xl shadow-indigo-500/25 ring-1 ring-white/20">
+    <!-- ========================================== -->
+    <!-- LEFT PANEL: Institutional Brand Showcase   -->
+    <!-- ========================================== -->
+    <div class="lg:col-span-7 xl:col-span-7 relative flex flex-col justify-between p-8 sm:p-12 lg:p-16 overflow-hidden border-b lg:border-b-0 lg:border-r border-slate-800/80 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
+        
+        <!-- Ambient Glow Orbs -->
+        <div class="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/25 rounded-full blur-3xl pointer-events-none animate-pulse" style="animation-duration: 7s;"></div>
+        <div class="absolute top-1/2 -right-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none animate-pulse" style="animation-duration: 9s;"></div>
+        <div class="absolute -bottom-32 left-1/3 w-80 h-80 bg-sky-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+        <!-- Subtle Background Grid Pattern -->
+        <div class="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]"></div>
+
+        <!-- Top Bar: Crest & Brand Title -->
+        <div class="relative z-10 flex items-center justify-between">
+            <div class="flex items-center space-x-3.5">
+                {% if school_setting.school_logo %}
+                    <img class="h-12 w-12 object-contain rounded-2xl bg-white/95 p-1.5 shadow-xl shadow-indigo-950/50 ring-1 ring-white/20" src="{{ school_setting.school_logo.url }}" alt="{{ school_setting.school_name }} Crest">
+                {% else %}
+                    <div class="h-12 w-12 rounded-2xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-violet-500 flex items-center justify-center text-white text-xl font-black shadow-lg shadow-indigo-600/30 ring-1 ring-white/20">
+                        {{ school_setting.school_name|slice:":1" }}
+                    </div>
+                {% endif %}
+                <div>
+                    <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-indigo-500/15 text-indigo-300 border border-indigo-400/20">
+                        Secondary Academic Portal
+                    </span>
+                    <h2 class="text-base sm:text-lg font-extrabold text-white tracking-tight leading-tight">
+                        {{ school_setting.school_name }}
+                    </h2>
+                </div>
+            </div>
+
+            <!-- Live Session Status Pill -->
+            <div class="hidden sm:inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-slate-900/80 border border-slate-700/60 shadow-xs text-xs text-slate-300 backdrop-blur-md">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span class="font-medium">
+                    {% if active_session %}{{ active_session.name }}{% else %}Current Session{% endif %}
+                    &bull;
+                    <span class="text-emerald-400 font-bold">{% if active_term %}{{ active_term.term_type }}{% else %}Active Term{% endif %}</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Center Stage: Hero Statement & Value Proposition -->
+        <div class="relative z-10 my-10 lg:my-auto max-w-xl space-y-8">
+            <div class="space-y-3">
+                <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-indigo-900/40 border border-indigo-500/30 text-indigo-300 text-xs font-semibold backdrop-blur-md">
+                    <svg class="w-3.5 h-3.5 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clip-rule="evenodd" />
+                    </svg>
+                    <span>Unified Institutional Administration</span>
+                </div>
+                
+                <h1 class="text-3xl sm:text-4xl xl:text-5xl font-black text-white tracking-tight leading-[1.15]">
+                    Knowledge, Character <br class="hidden sm:inline" />
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-300 to-sky-300">&amp; Excellence in Education.</span>
+                </h1>
+
+                <p class="text-sm sm:text-base text-slate-300 leading-relaxed font-normal pt-1">
+                    {{ school_setting.school_motto|default:"Empowering educators and inspiring learners with world-class academic automation." }}
+                </p>
+            </div>
+
+            <!-- 3 Pillar Feature Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2">
+                
+                <!-- Pillar 1 -->
+                <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md hover:border-indigo-500/40 hover:bg-slate-900/90 transition-all duration-300 group">
+                    <div class="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-400/20 text-indigo-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </div>
+                    <h3 class="text-xs font-bold text-white">Academic Engine</h3>
+                    <p class="text-[11px] text-slate-400 mt-1 leading-snug">Instant terminal broadsheets, CA weighting &amp; report cards.</p>
+                </div>
+
+                <!-- Pillar 2 -->
+                <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md hover:border-emerald-500/40 hover:bg-slate-900/90 transition-all duration-300 group">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-400/20 text-emerald-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    </div>
+                    <h3 class="text-xs font-bold text-white">Smart Bursary</h3>
+                    <p class="text-[11px] text-slate-400 mt-1 leading-snug">Cumulative fee computation, installment tracking &amp; receipts.</p>
+                </div>
+
+                <!-- Pillar 3 -->
+                <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md hover:border-purple-500/40 hover:bg-slate-900/90 transition-all duration-300 group">
+                    <div class="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-400/20 text-purple-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    </div>
+                    <h3 class="text-xs font-bold text-white">Student Records</h3>
+                    <p class="text-[11px] text-slate-400 mt-1 leading-snug">Form master assignments, class arms &amp; bulk session rollover.</p>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Bottom Footer: Institution Accreditations & Security -->
+        <div class="relative z-10 pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-400">
+            <div class="flex items-center space-x-2">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <span>Certified Secondary Institution System</span>
+            </div>
+            <div class="text-[11px] text-slate-500">
+                {{ school_setting.address }}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- RIGHT PANEL: Authentication Form & Portal  -->
+    <!-- ========================================== -->
+    <div class="lg:col-span-5 xl:col-span-5 flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-16 bg-white relative">
+
+        <!-- Top Right Help Shortcut -->
+        <div class="flex items-center justify-between pb-6">
+            <!-- Mobile Brand Header (shows only on mobile when left panel is above) -->
+            <div class="lg:hidden flex items-center space-x-2.5">
+                <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">
                     {{ school_setting.school_name|slice:":1" }}
                 </div>
+                <span class="text-xs font-bold text-slate-900 truncate max-w-[180px]">{{ school_setting.school_name }}</span>
+            </div>
+
+            <div class="ml-auto">
+                <button type="button" onclick="toggleHelpModal()" class="inline-flex items-center space-x-1.5 text-xs font-semibold text-slate-500 hover:text-indigo-600 transition cursor-pointer">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Staff ICT Help</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Center Form Box -->
+        <div class="my-auto max-w-md w-full mx-auto space-y-6">
+
+            <!-- Title & Welcome Subtitle -->
+            <div class="space-y-1.5">
+                <div class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                    <svg class="w-3 h-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    <span>Official Staff Gateway</span>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                    Sign In to Portal
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-500 leading-normal">
+                    Enter your assigned Staff ID or Username and password to continue.
+                </p>
+            </div>
+
+            <!-- Flash Error Messages -->
+            {% if messages %}
+            <div class="space-y-2">
+                {% for message in messages %}
+                <div class="p-4 rounded-2xl text-xs font-semibold flex items-start space-x-3 {% if message.tags == 'error' %}bg-rose-50 border border-rose-200 text-rose-800{% else %}bg-indigo-50 border border-indigo-200 text-indigo-800{% endif %}">
+                    <svg class="w-4 h-4 shrink-0 mt-0.5 {% if message.tags == 'error' %}text-rose-500{% else %}text-indigo-500{% endif %}" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="leading-relaxed">{{ message }}</span>
+                </div>
+                {% endfor %}
+            </div>
             {% endif %}
-            <h2 class="mt-6 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-                {{ school_setting.school_name }}
-            </h2>
-            <p class="mt-2 text-sm text-indigo-300 font-medium">
-                {{ school_setting.school_motto }}
-            </p>
-        </div>
 
-        <!-- Flash alerts for login errors -->
-        {% if messages %}
-        <div class="mt-6 space-y-2">
-            {% for message in messages %}
-            <div class="p-4 rounded-xl text-sm font-medium {% if message.tags == 'error' %}bg-rose-900/60 border border-rose-500/40 text-rose-200{% else %}bg-indigo-900/60 border border-indigo-500/40 text-indigo-200{% endif %}">
-                {{ message }}
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        <!-- Login Card -->
-        <div class="mt-6 bg-slate-900/90 backdrop-blur-xl py-8 px-6 shadow-2xl rounded-3xl border border-slate-800 sm:px-10">
-            <div class="mb-6 pb-4 border-b border-slate-800">
-                <h3 class="text-lg font-bold text-white">Staff Portal Login</h3>
-                <p class="text-xs text-slate-400">Sign in with your assigned Staff ID or Username</p>
-            </div>
-
-            <form class="space-y-5" method="POST" action="{% url 'accounts:login' %}">
-                {% csrf_token %}
-                
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Username or Staff ID</label>
-                    {{ form.username }}
-                    {% if form.username.errors %}
-                        <p class="mt-1 text-xs text-rose-400">{{ form.username.errors.0 }}</p>
-                    {% endif %}
+            <!-- Interactive 1-Click Demo Fill Selector -->
+            <div class="bg-slate-50/80 rounded-2xl p-3.5 border border-slate-200/80 space-y-2">
+                <div class="flex items-center justify-between text-xs font-bold text-slate-700">
+                    <span class="flex items-center space-x-1.5">
+                        <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        <span>Quick Demo Sign-In:</span>
+                    </span>
+                    <span id="roleIndicator" class="text-[10px] font-semibold text-slate-400">Click to auto-fill</span>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Password</label>
-                    {{ form.password }}
-                    {% if form.password.errors %}
-                        <p class="mt-1 text-xs text-rose-400">{{ form.password.errors.0 }}</p>
-                    {% endif %}
-                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <button type="button" onclick="fillCredentials('principal', 'password123', 'Principal')" 
+                        class="demo-chip px-2.5 py-2 rounded-xl bg-white hover:bg-indigo-50 hover:text-indigo-700 border border-slate-200/90 text-[11px] font-bold text-slate-700 shadow-2xs hover:border-indigo-300 transition-all text-center cursor-pointer flex flex-col items-center justify-center">
+                        <span class="text-sm mb-0.5">👑</span>
+                        <span>Principal</span>
+                    </button>
 
-                <div class="pt-2">
-                    <button type="submit" class="w-full flex justify-center py-3.5 px-4 rounded-xl shadow-lg shadow-indigo-600/30 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out cursor-pointer">
-                        Access Staff Portal
+                    <button type="button" onclick="fillCredentials('teacher_math', 'password123', 'Class Teacher')" 
+                        class="demo-chip px-2.5 py-2 rounded-xl bg-white hover:bg-indigo-50 hover:text-indigo-700 border border-slate-200/90 text-[11px] font-bold text-slate-700 shadow-2xs hover:border-indigo-300 transition-all text-center cursor-pointer flex flex-col items-center justify-center">
+                        <span class="text-sm mb-0.5">📚</span>
+                        <span>Teacher</span>
+                    </button>
+
+                    <button type="button" onclick="fillCredentials('accountant', 'password123', 'Bursar')" 
+                        class="demo-chip px-2.5 py-2 rounded-xl bg-white hover:bg-indigo-50 hover:text-indigo-700 border border-slate-200/90 text-[11px] font-bold text-slate-700 shadow-2xs hover:border-indigo-300 transition-all text-center cursor-pointer flex flex-col items-center justify-center">
+                        <span class="text-sm mb-0.5">💼</span>
+                        <span>Bursar</span>
                     </button>
                 </div>
+            </div>
+
+            <!-- Login Form -->
+            <form method="POST" action="{% url 'accounts:login' %}" class="space-y-4" id="staffLoginForm">
+                {% csrf_token %}
+
+                <!-- Username or Staff ID Field -->
+                <div>
+                    <label for="id_username" class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                        <span>Username or Staff ID</span>
+                        <span class="text-[10px] text-slate-400 font-normal">e.g. STF-2025-001 or principal</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        </div>
+                        {{ form.username }}
+                    </div>
+                    {% if form.username.errors %}
+                        <p class="mt-1.5 text-xs text-rose-600 font-semibold">{{ form.username.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Password Field with Show/Hide Toggle -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label for="id_password" class="block text-xs font-bold text-slate-700">Password</label>
+                        <a href="javascript:void(0)" onclick="toggleHelpModal()" class="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 hover:underline">
+                            Forgot password?
+                        </a>
+                    </div>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        </div>
+                        {{ form.password }}
+                        <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer focus:outline-none" title="Toggle password visibility">
+                            <!-- Eye icon -->
+                            <svg id="eyeOpenIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <!-- Eye closed icon -->
+                            <svg id="eyeClosedIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                            </svg>
+                        </button>
+                    </div>
+                    {% if form.password.errors %}
+                        <p class="mt-1.5 text-xs text-rose-600 font-semibold">{{ form.password.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Remember Device & Security Note -->
+                <div class="flex items-center justify-between pt-1 text-xs">
+                    <label class="flex items-center space-x-2 text-slate-600 cursor-pointer">
+                        <input type="checkbox" name="remember_me" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer">
+                        <span class="font-medium">Remember this workstation</span>
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-2">
+                    <button type="submit" id="submitBtn"
+                        class="w-full py-4 px-6 rounded-2xl shadow-lg shadow-indigo-600/25 hover:shadow-xl hover:shadow-indigo-600/35 text-white font-extrabold text-sm bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 hover:from-indigo-500 hover:to-indigo-700 active:scale-[0.99] transition-all duration-150 flex items-center justify-center space-x-2 cursor-pointer">
+                        <span>Access Staff Portal</span>
+                        <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </button>
+                </div>
+
             </form>
 
-            <!-- Demo Credentials Helper Accordion -->
-            <div class="mt-8 pt-5 border-t border-slate-800 text-xs text-slate-400">
-                <p class="font-semibold text-slate-300 mb-2 flex items-center justify-between">
-                    <span>Quick Demo Credentials</span>
-                    <span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded">Pre-seeded</span>
-                </p>
-                <div class="space-y-1.5 font-mono text-[11px] bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
-                    <div class="flex justify-between items-center text-slate-300">
-                        <span><strong>Principal:</strong> principal</span>
-                        <span class="text-indigo-400">password123</span>
-                    </div>
-                    <div class="flex justify-between items-center text-slate-300">
-                        <span><strong>Teacher:</strong> teacher_math</span>
-                        <span class="text-indigo-400">password123</span>
-                    </div>
-                    <div class="flex justify-between items-center text-slate-300">
-                        <span><strong>Accountant:</strong> accountant</span>
-                        <span class="text-indigo-400">password123</span>
-                    </div>
-                </div>
+        </div>
+
+        <!-- Bottom Footer: Security & Help -->
+        <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-400">
+            <div class="flex items-center space-x-1.5">
+                <svg class="w-3.5 h-3.5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <span>256-Bit SSL Encrypted Session</span>
+            </div>
+            <div>
+                Support: <span class="font-semibold text-slate-600">{{ school_setting.phone }}</span>
             </div>
         </div>
 
-        <!-- School Contact Footer -->
-        <div class="mt-6 text-center text-xs text-slate-500">
-            <p>{{ school_setting.address }}</p>
-            <p class="mt-1">Inquiries: {{ school_setting.phone }} | {{ school_setting.email }}</p>
+    </div>
+
+</div>
+
+<!-- ========================================== -->
+<!-- STAFF ICT SUPPORT MODAL                    -->
+<!-- ========================================== -->
+<div id="helpModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 hidden" aria-modal="true" role="dialog">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-base font-extrabold text-slate-900">Staff Access &amp; Support</h3>
+                    <p class="text-xs text-slate-500">School ICT &amp; Administration Desk</p>
+                </div>
+            </div>
+            <button type="button" onclick="toggleHelpModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold p-1 cursor-pointer">&times;</button>
+        </div>
+
+        <div class="space-y-3 text-xs text-slate-600 leading-relaxed">
+            <p>
+                To maintain institutional data security, staff passwords cannot be self-reset online without administrator confirmation.
+            </p>
+            <div class="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-100 space-y-1.5 text-indigo-900">
+                <p class="font-bold">How to regain access:</p>
+                <ul class="list-disc list-inside space-y-1 text-[11px] text-indigo-800">
+                    <li>Contact the <strong>School ICT Administrator</strong> or <strong>Principal's Office</strong>.</li>
+                    <li>Provide your official <strong>Staff Identification Number</strong> (e.g. STF-2025-001).</li>
+                    <li>An authorized temporary password will be issued to your verified contact.</li>
+                </ul>
+            </div>
+            <div class="pt-2 border-t border-slate-100 space-y-1 text-slate-500">
+                <p><strong>Official Phone:</strong> {{ school_setting.phone }}</p>
+                <p><strong>Official Email:</strong> {{ school_setting.email }}</p>
+            </div>
+        </div>
+
+        <div class="flex justify-end pt-2">
+            <button type="button" onclick="toggleHelpModal()" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition cursor-pointer">
+                Got It
+            </button>
         </div>
     </div>
 </div>
+
+<!-- Interactive Client-side Script -->
+<script>
+    function fillCredentials(username, password, roleLabel) {
+        const userInput = document.getElementById('id_username');
+        const passInput = document.getElementById('id_password');
+        const indicator = document.getElementById('roleIndicator');
+
+        if (userInput && passInput) {
+            userInput.value = username;
+            passInput.value = password;
+
+            // Highlight animation
+            userInput.classList.add('ring-4', 'ring-indigo-500/20', 'border-indigo-600', 'bg-white');
+            passInput.classList.add('ring-4', 'ring-indigo-500/20', 'border-indigo-600', 'bg-white');
+            
+            setTimeout(() => {
+                userInput.classList.remove('ring-4', 'ring-indigo-500/20');
+                passInput.classList.remove('ring-4', 'ring-indigo-500/20');
+            }, 1200);
+
+            if (indicator) {
+                indicator.innerHTML = `<span class="text-indigo-600 font-bold">✓ Selected: ${roleLabel}</span>`;
+            }
+        }
+    }
+
+    function togglePasswordVisibility() {
+        const passInput = document.getElementById('id_password');
+        const eyeOpen = document.getElementById('eyeOpenIcon');
+        const eyeClosed = document.getElementById('eyeClosedIcon');
+
+        if (passInput) {
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                eyeOpen.classList.add('hidden');
+                eyeClosed.classList.remove('hidden');
+            } else {
+                passInput.type = 'password';
+                eyeOpen.classList.remove('hidden');
+                eyeClosed.classList.add('hidden');
+            }
+        }
+    }
+
+    function toggleHelpModal() {
+        const modal = document.getElementById('helpModal');
+        if (modal) {
+            modal.classList.toggle('hidden');
+        }
+    }
+</script>
 {% endblock %}
